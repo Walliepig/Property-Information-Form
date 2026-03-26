@@ -31,7 +31,7 @@
       min-height:100vh;
       padding:18px 12px 42px;
       background:
-         linear-gradient(180deg, #2F3542 0 290px, #eef1f3 290px 100%);
+        linear-gradient(180deg, #2F3542 0 335px, #eef1f3 335px 100%);
     }
     .shell{max-width:780px;margin:0 auto}
     .brand{
@@ -56,23 +56,25 @@
       height:auto;
     }
     .brand h1{
-      margin:0 0 10px;
+      margin:0 0 8px;
       font-family:"Big Caslon", "Big Caslon Medium", Georgia, "Times New Roman", serif;
       font-size:clamp(2rem, 2vw + 1.2rem, 2.7rem);
       font-weight:500;
-      line-height:1.05;
+      line-height:1.02;
       letter-spacing:.01em;
       color:#ffffff;
+      text-shadow:0 2px 6px rgba(0,0,0,.22);
+      text-align:center;
     }
     .brand p{
       margin:0 auto;
-      max-width:780px;
+      max-width:680px;
       color:rgba(255,255,255,.92);
-      line-height:1.55;
+      line-height:1.42;
       font-size:1rem;
       text-shadow:0 1px 4px rgba(0,0,0,.18);
       text-align:center;
-      padding:0 12px;
+      padding:0 16px;
     }
     .brand.compact h1,
     .brand.compact p{
@@ -269,6 +271,23 @@
       gap:10px;
       flex-wrap:wrap;
       margin-top:12px;
+    }
+    @media (max-width:639px){
+      .brand{
+        padding:10px 10px 14px;
+      }
+      .brand .logo{
+        width:min(110px,34vw);
+        margin:6px auto 12px;
+      }
+      .brand h1{
+        font-size:clamp(1.55rem, 6.8vw, 2.25rem);
+      }
+      .brand p{
+        font-size:.95rem;
+        line-height:1.38;
+        max-width:320px;
+      }
     }
     @media (min-width:640px){
       .page{padding:26px 16px 52px}
