@@ -490,9 +490,7 @@
       { id:"rights_of_way", kind:"choice", section:"risk", title:"Any rights of way, shared access or shared driveway arrangements?", options:["No","Yes","Not sure"] },
       { id:"rights_of_way_details", kind:"textarea", section:"risk", title:"Please add brief details", label:"Shared access / rights of way details", placeholder:"Brief details", showIf:d=>d.rights_of_way==="Yes" },
       { id:"planning_works", kind:"choice", section:"risk", title:"Have there been any recent works, improvements or upgrades?", options:["No","Yes","Not sure"] },
-      { id:"planning_works_details", kind:"textarea", section:"risk", title:"Please tell us about the works", label:"Works, improvements or upgrades", placeholder:"Examples: extension, kitchen, windows, roof, boiler, rewiring, landscaping", showIf:d=>d.planning_works==="Yes" },
-      { id:"planning_permission_docs", kind:"choice", section:"risk", title:"Do you have the relevant planning permission / building regulations paperwork, if applicable?", options:["Yes","No","Not applicable","Not sure"], showIf:d=>d.planning_works==="Yes" },
-      { id:"guarantees_docs", kind:"choice", section:"risk", title:"Do you have any guarantees, warranties or completion certificates for the works?", options:["Yes","No","Not applicable","Not sure"], showIf:d=>d.planning_works==="Yes" },
+      { id:"planning_works_details", kind:"textarea", section:"risk", title:"Please detail the works and when they were undertaken", label:"Works, improvements or upgrades", placeholder:"For example: uPVC replacement windows August 2023, new boiler 2021, kitchen refit 2019", showIf:d=>d.planning_works==="Yes" },      { id:"guarantees_docs", kind:"choice", section:"risk", title:"Do you have any guarantees, warranties or completion certificates for the works?", options:["Yes","No","Not applicable","Not sure"], showIf:d=>d.planning_works==="Yes" },
 
       { id:"friendly_3", kind:"notice", section:"Progress update", title:"Almost there", body:["A few final details now help us present the property clearly and identify anything we should tidy up before marketing starts.","Thank you for sticking with it."], buttons:[{label:"Continue",style:"primary",action:"next"}] },
 
@@ -547,14 +545,23 @@
     }
 
     function goNext(){
-      const vis = visibleScreens();
-      const idx = vis.findIndex(s => s.id === screenId);
-      if(idx >= 0 && idx < vis.length - 1){
-        screenId = vis[idx + 1].id;
-      }
-      saveState();
-      render();
+  const current = screens.find(s => s.id === screenId);
+
+  if(current && (current.kind === "text" || current.kind === "textarea") && current.required){
+    if(!String(data[current.id] || "").trim()){
+      alert("Please complete this field before continuing.");
+      return;
     }
+  }
+
+  const vis = visibleScreens();
+  const idx = vis.findIndex(s => s.id === screenId);
+  if(idx >= 0 && idx < vis.length - 1){
+    screenId = vis[idx + 1].id;
+  }
+  saveState();
+  render();
+}
 
     function goPrev(){
       const vis = visibleScreens();
@@ -572,16 +579,18 @@
     }
 
     function handleTextInput(id, el){
-      if(id === "legal_owner_names"){
-        const lines = el.value.split("\n").map(line =>
-          line.replace(/\b[a-z]/g, c => c.toUpperCase())
-        );
-        el.value = lines.join("\n");
-        data[id] = el.value;
-      } else {
-        data[id] = el.value;
-      }
-      saveState();
+  if(id === "legal_owner_names"){
+    const lines = el.value.split("\n").map(line =>
+      line.replace(/\b[a-z]/g, c => c.toUpperCase())
+    );
+    el.value = lines.join("\n");
+    data[id] = el.value;
+  } else {
+    data[id] = el.value;
+  }
+
+  saveState();
+}
 
       const screen = screens.find(s => s.id === id);
       if(screen && screen.required){
@@ -641,11 +650,8 @@
     }
 
     function nextButtonDisabled(screen){
-      if(screen.kind === "text" || screen.kind === "textarea"){
-        return screen.required && !String(data[screen.id] || "").trim();
-      }
-      return false;
-    }
+  return false;
+}
         function renderNotice(screen){
       const buttons = (screen.buttons || []).map(b => `
         <button class="btn ${b.style || 'ghost'}" onclick="handleAction('${b.action}')">${escapeHtml(b.label)}</button>
