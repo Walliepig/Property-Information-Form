@@ -307,7 +307,7 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "sm_property_information_form_v2";
+    const STORAGE_KEY = "sm_property_information_form_v3";
     const SUBMISSION_EMAIL = "sales@stephaniemacnab.co.uk";
     const PRIVACY_URL = "https://www.stephaniemacnab.co.uk/privacy-policy/";
     const data = loadState();
@@ -343,12 +343,15 @@
       garden_orientation: "Rear garden orientation",
       electricity_supply: "Electricity supply",
       electricity_meter_location: "Electricity meter location",
+      electricity_meter_location_other: "Electricity meter location details",
       gas_supply: "Gas supply",
       gas_meter_location: "Gas meter location",
+      gas_meter_location_other: "Gas meter location details",
       water_supply: "Water supply",
       drainage: "Drainage",
       water_meter: "Water meter",
       water_meter_location: "Water meter location",
+      water_meter_location_other: "Water meter location details",
       water_stop_tap_location: "Internal stop tap location",
       utilities_issues: "Utility issues",
       utilities_issues_details: "Utility issue details",
@@ -488,13 +491,18 @@
       { id:"friendly_2", kind:"notice", section:"Progress update", title:"You are doing well", body:["This next section helps us answer the usual buyer questions at the viewing, rather than having to ring the office afterwards.","That tends to make viewings smoother and more efficient for everyone."], buttons:[{label:"Continue",style:"primary",action:"next"}] },
 
       { id:"electricity_supply", kind:"choice", section:"utilities", title:"Electricity supply", options:["Mains electricity","Other","Not sure"] },
-      { id:"electricity_meter_location", kind:"text", section:"utilities", title:"Where is the electricity meter?", label:"Electricity meter location", placeholder:"For example, hallway cupboard, under stairs, external box, garage, not sure" },
+      { id:"electricity_meter_location", kind:"choice", section:"utilities", title:"Where is the electricity meter?", options:["Hall","Under the stairs","Porch","Garage","External box","Other","Not sure"] },
+      { id:"electricity_meter_location_other", kind:"text", section:"utilities", title:"Please specify the electricity meter location", label:"Electricity meter location", placeholder:"Brief description", showIf:d=>d.electricity_meter_location==="Other" },
+
       { id:"gas_supply", kind:"choice", section:"utilities", title:"Gas supply", options:["Mains gas","No mains gas","Not sure"] },
-      { id:"gas_meter_location", kind:"text", section:"utilities", title:"Where is the gas meter?", label:"Gas meter location", placeholder:"For example, kitchen cupboard, external box, garage, not sure", showIf:d=>d.gas_supply==="Mains gas" || d.gas_supply==="Not sure" },
+      { id:"gas_meter_location", kind:"choice", section:"utilities", title:"Where is the gas meter?", options:["Hall","Under the stairs","Porch","Garage","External box","Other","Not sure"], showIf:d=>d.gas_supply==="Mains gas" || d.gas_supply==="Not sure" },
+      { id:"gas_meter_location_other", kind:"text", section:"utilities", title:"Please specify the gas meter location", label:"Gas meter location", placeholder:"Brief description", showIf:d=>d.gas_meter_location==="Other" },
+
       { id:"water_supply", kind:"choice", section:"utilities", title:"Water supply", options:["Mains water","Private supply","Not sure"] },
       { id:"drainage", kind:"choice", section:"utilities", title:"Drainage", options:["Mains drainage","Septic tank","Treatment plant","Cesspit","Other","Not sure"] },
       { id:"water_meter", kind:"choice", section:"utilities", title:"Is there a water meter?", options:["Yes","No","Not sure"] },
-      { id:"water_meter_location", kind:"text", section:"utilities", title:"Where is the water meter?", label:"Water meter location", placeholder:"For example, outside front path, pavement chamber, kitchen cupboard, not sure", showIf:d=>d.water_meter==="Yes" || d.water_meter==="Not sure" },
+      { id:"water_meter_location", kind:"choice", section:"utilities", title:"Where is the water meter?", options:["Hall","Under the stairs","Porch","Garage","External chamber outside","Other","Not sure"], showIf:d=>d.water_meter==="Yes" || d.water_meter==="Not sure" },
+      { id:"water_meter_location_other", kind:"text", section:"utilities", title:"Please specify the water meter location", label:"Water meter location", placeholder:"Brief description", showIf:d=>d.water_meter_location==="Other" },
       { id:"water_stop_tap_location", kind:"text", section:"utilities", title:"Where is the internal stop tap, if known?", label:"Internal stop tap location", placeholder:"For example, under kitchen sink, utility room, downstairs WC, not sure" },
       { id:"utilities_issues", kind:"choice", section:"utilities", title:"Are you aware of any issues with water pressure, drainage performance or utility connections?", options:["No","Yes","Not sure"] },
       { id:"utilities_issues_details", kind:"textarea", section:"utilities", title:"Please add brief details", label:"Utility issue details", placeholder:"Brief details", showIf:d=>d.utilities_issues==="Yes" },
@@ -502,8 +510,7 @@
       { id:"mobile_signal", kind:"choice", section:"utilities", title:"Mobile signal, if known", options:["Generally good","Variable","Poor","Not sure"] },
       { id:"heating_type", kind:"choice", section:"utilities", title:"What type of heating does the property have?", options:["Gas boiler","Electric heating","Oil-fired heating","LPG","Solid fuel","Heat pump","Other","Not sure"] },
       { id:"heating_type_other", kind:"text", section:"utilities", title:"Please add the heating type", label:"Other heating arrangement", placeholder:"Brief details", showIf:d=>d.heating_type==="Other" },
-
-      { id:"boiler_type", kind:"choice", section:"viewing", title:"If there is a boiler, what type is it?", options:["Combi boiler","System boiler","Conventional boiler with hot water tank","No boiler","Not sure"], showIf:d=>["Gas boiler","Oil-fired heating","LPG"].includes(d.heating_type) || d.heating_type==="Not sure" },
+            { id:"boiler_type", kind:"choice", section:"viewing", title:"If there is a boiler, what type is it?", options:["Combi boiler","System boiler","Conventional boiler with hot water tank","No boiler","Not sure"], showIf:d=>["Gas boiler","Oil-fired heating","LPG"].includes(d.heating_type) || d.heating_type==="Not sure" },
       { id:"boiler_location", kind:"choice", section:"viewing", title:"Where is the boiler?", options:["Kitchen","Utility room","Airing cupboard","Loft","Garage","Outbuilding","No boiler","Other","Not sure"], showIf:d=>["Gas boiler","Oil-fired heating","LPG"].includes(d.heating_type) || d.heating_type==="Not sure" },
       { id:"boiler_age", kind:"choice", section:"viewing", title:"Approximate age of the boiler", options:["Under 5 years","5 to 10 years","More than 10 years","No boiler","Not sure"], showIf:d=>["Gas boiler","Oil-fired heating","LPG"].includes(d.heating_type) || d.heating_type==="Not sure" },
       { id:"boiler_serviced", kind:"choice", section:"viewing", title:"Is the boiler serviced annually?", options:["Yes","No","No boiler","Not sure"], showIf:d=>["Gas boiler","Oil-fired heating","LPG"].includes(d.heating_type) || d.heating_type==="Not sure" },
@@ -893,7 +900,7 @@
             <h3>Services and utilities</h3>
             <button class="btn ghost" style="width:auto" onclick="editSection('utilities')">Edit</button>
           </div>
-          <div class="kv">${groupSectionRows(["electricity_supply","electricity_meter_location","gas_supply","gas_meter_location","water_supply","drainage","water_meter","water_meter_location","water_stop_tap_location","utilities_issues","utilities_issues_details","broadband","mobile_signal","heating_type","heating_type_other"])}</div>
+          <div class="kv">${groupSectionRows(["electricity_supply","electricity_meter_location","electricity_meter_location_other","gas_supply","gas_meter_location","gas_meter_location_other","water_supply","drainage","water_meter","water_meter_location","water_meter_location_other","water_stop_tap_location","utilities_issues","utilities_issues_details","broadband","mobile_signal","heating_type","heating_type_other"])}</div>
         </div>
 
         <div class="section-card">
@@ -989,13 +996,13 @@
 
       lines.push("SERVICES AND UTILITIES");
       lines.push(`Electricity: ${data.electricity_supply || "—"}`);
-      lines.push(`Electricity meter location: ${data.electricity_meter_location || "—"}`);
+      lines.push(`Electricity meter location: ${data.electricity_meter_location === "Other" ? (data.electricity_meter_location_other || "Other") : (data.electricity_meter_location || "—")}`);
       lines.push(`Gas: ${data.gas_supply || "—"}`);
-      if(data.gas_supply === "Mains gas" || data.gas_supply === "Not sure") lines.push(`Gas meter location: ${data.gas_meter_location || "—"}`);
+      if(data.gas_supply === "Mains gas" || data.gas_supply === "Not sure") lines.push(`Gas meter location: ${data.gas_meter_location === "Other" ? (data.gas_meter_location_other || "Other") : (data.gas_meter_location || "—")}`);
       lines.push(`Water supply: ${data.water_supply || "—"}`);
       lines.push(`Drainage: ${data.drainage || "—"}`);
       lines.push(`Water meter: ${data.water_meter || "—"}`);
-      if(data.water_meter === "Yes" || data.water_meter === "Not sure") lines.push(`Water meter location: ${data.water_meter_location || "—"}`);
+      if(data.water_meter === "Yes" || data.water_meter === "Not sure") lines.push(`Water meter location: ${data.water_meter_location === "Other" ? (data.water_meter_location_other || "Other") : (data.water_meter_location || "—")}`);
       lines.push(`Internal stop tap location: ${data.water_stop_tap_location || "—"}`);
       if(data.utilities_issues) lines.push(`Utility issues: ${data.utilities_issues}`);
       if(data.utilities_issues_details) lines.push(`Utility issue details: ${cleanOneLine(data.utilities_issues_details)}`);
