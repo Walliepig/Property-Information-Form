@@ -491,8 +491,10 @@
       { id:"rights_of_way", kind:"choice", section:"risk", title:"Any rights of way, shared access or shared driveway arrangements?", options:["No","Yes","Not sure"] },
       { id:"rights_of_way_details", kind:"textarea", section:"risk", title:"Please add brief details", label:"Shared access / rights of way details", placeholder:"Brief details", showIf:d=>d.rights_of_way==="Yes" },
       { id:"planning_works", kind:"choice", section:"risk", title:"Have there been any recent works, improvements or upgrades?", options:["No","Yes","Not sure"] },
-      { id:"planning_works_details", kind:"textarea", section:"risk", title:"Please detail the works and when they were undertaken", label:"Works, improvements or upgrades", placeholder:"For example: uPVC replacement windows August 2023, new boiler 2021, kitchen refit 2019", showIf:d=>d.planning_works==="Yes" },      { id:"guarantees_docs", kind:"choice", section:"risk", title:"Do you have any guarantees, warranties or completion certificates for the works?", options:["Yes","No","Not applicable","Not sure"], showIf:d=>d.planning_works==="Yes" },
-
+      { id:"planning_works_details", kind:"textarea", section:"risk", title:"Please detail the works and when they were undertaken", label:"Works, improvements or upgrades", placeholder:"For example: uPVC replacement windows August 2023, new boiler 2021, kitchen refit 2019", showIf:d=>d.planning_works==="Yes" },
+      { id:"planning_permission_docs", kind:"choice", section:"risk", title:"Do you have the relevant planning permission / building regulations paperwork, if applicable?", options:["Yes","No","Not applicable","Not sure"], showIf:d=>d.planning_works==="Yes" },
+      { id:"guarantees_docs", kind:"choice", section:"risk", title:"Do you have any guarantees, warranties or completion certificates for the works?", options:["Yes","No","Not applicable","Not sure"], showIf:d=>d.planning_works==="Yes" },
+   
       { id:"friendly_3", kind:"notice", section:"Progress update", title:"Almost there", body:["A few final details now help us present the property clearly and identify anything we should tidy up before marketing starts.","Thank you for sticking with it."], buttons:[{label:"Continue",style:"primary",action:"next"}] },
 
       { id:"lease_years_remaining", kind:"text", section:"leasehold", title:"How many years are left on the lease, if known?", label:"Years remaining on lease", placeholder:"For example, 112", showIf:d=>["Leasehold","Share of freehold"].includes(d.tenure) },
@@ -580,25 +582,19 @@
     }
 
     function handleTextInput(id, el){
-  if(id === "legal_owner_names"){
-    const lines = el.value.split("\n").map(line =>
-      line.replace(/\b[a-z]/g, c => c.toUpperCase())
-    );
-    el.value = lines.join("\n");
-    data[id] = el.value;
-  } else {
-    data[id] = el.value;
-  }
-
-  saveState();
-}
-
-      const screen = screens.find(s => s.id === id);
-      if(screen && screen.required){
-        render();
+      if(id === "legal_owner_names"){
+        const lines = el.value.split("\n").map(line =>
+        line.replace(/\b[a-z]/g, c => c.toUpperCase())
+        );
+        el.value = lines.join("\n");
+        data[id] = el.value;
+      } else {
+        data[id] = el.value;
       }
-    }
 
+      saveState();
+    }
+    
     function startNew(){
       clearState(true);
       screenId = "consent";
