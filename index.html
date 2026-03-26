@@ -37,9 +37,10 @@
       text-align:center;
       color:#fff;
       padding:8px 8px 18px;
+      transition:all .2s ease;
     }
     .brand .logo{
-      width:min(250px,75vw);
+      width:min(125px,38vw);
       display:block;
       margin:8px auto 16px;
       height:auto;
@@ -51,6 +52,7 @@
       font-weight:500;
       line-height:1.05;
       letter-spacing:.01em;
+      color:#000;
     }
     .brand p{
       margin:0 auto;
@@ -58,6 +60,10 @@
       color:rgba(255,255,255,.92);
       line-height:1.55;
       font-size:1rem;
+    }
+    .brand.compact h1,
+    .brand.compact p{
+      display:none;
     }
     .card{
       background:#fff;
@@ -162,6 +168,11 @@
       background:#fff;
       color:var(--brand-slate);
     }
+    .btn:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+      box-shadow:none;
+    }
     .field{display:grid;gap:7px;margin-top:10px}
     label{
       font-size:.93rem;
@@ -221,17 +232,6 @@
       line-height:1.45;
       word-break:break-word;
     }
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:7px 10px;
-      background:#f1f2f3;
-      color:#414950;
-      border-radius:999px;
-      font-size:.84rem;
-      font-weight:700;
-    }
     .notice{
       border-left:4px solid var(--brand-yellow);
       background:#fff8db;
@@ -242,7 +242,6 @@
     .notice h3{margin:0 0 8px}
     .notice ul{margin:0;padding-left:18px}
     .notice li{margin:0 0 7px;line-height:1.45}
-    .edit-grid{display:grid;gap:10px;margin-top:12px}
     .thankyou{text-align:center;padding-top:6px}
     .thankyou .sig{
       width:min(280px,76%);
@@ -251,7 +250,6 @@
       height:auto;
     }
     .split{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-    .hidden{display:none!important}
     .summary-action{
       display:flex;
       gap:10px;
@@ -261,7 +259,6 @@
     @media (min-width:640px){
       .page{padding:26px 16px 52px}
       .content{padding:28px 24px 22px}
-      .edit-grid{grid-template-columns:1fr 1fr}
       .summary-action{justify-content:space-between}
       .nav .btn{width:auto;min-width:140px}
     }
@@ -270,7 +267,7 @@
 <body>
   <div class="page">
     <div class="shell">
-      <div class="brand">
+      <div class="brand" id="brandHeader">
         <img src="SM Main Logo.png" alt="Stephanie Macnab Estate Agent" class="logo" />
         <h1>Property Information Form</h1>
         <p>A clean, mobile-friendly form to help us prepare your property for marketing, capture the information buyers usually ask for and reduce avoidable delays once the property is launched.</p>
@@ -320,10 +317,14 @@
       parking_other: "Other parking",
       garden_orientation: "Rear garden orientation",
       electricity_supply: "Electricity supply",
+      electricity_meter_location: "Electricity meter location",
       gas_supply: "Gas supply",
+      gas_meter_location: "Gas meter location",
       water_supply: "Water supply",
       drainage: "Drainage",
       water_meter: "Water meter",
+      water_meter_location: "Water meter location",
+      water_stop_tap_location: "Internal stop tap location",
       broadband: "Broadband",
       mobile_signal: "Mobile signal",
       heating_type: "Heating type",
@@ -414,7 +415,6 @@
           { label: "I understand, continue", style: "primary", action: "next" }
         ]
       },
-
       { id:"address_line_1", kind:"text", section:"property", title:"Property address", label:"Address line 1", placeholder:"House number and street", required:true },
       { id:"address_line_2", kind:"text", section:"property", title:"Property address", label:"Address line 2", placeholder:"Area or locality, if needed" },
       { id:"town_city", kind:"text", section:"property", title:"Town or city", label:"Town or city", placeholder:"Town or city", required:true },
@@ -449,16 +449,19 @@
       { id:"friendly_2", kind:"notice", section:"Progress update", title:"You are doing well", body:["This next section helps us answer the usual buyer questions at the viewing, rather than having to ring the office afterwards.","That tends to make viewings smoother and more efficient for everyone."], buttons:[{label:"Continue",style:"primary",action:"next"}] },
 
       { id:"electricity_supply", kind:"choice", section:"utilities", title:"Electricity supply", options:["Mains electricity","Other","Not sure"] },
+      { id:"electricity_meter_location", kind:"text", section:"utilities", title:"Where is the electricity meter?", label:"Electricity meter location", placeholder:"For example, hallway cupboard, under stairs, external box, garage, not sure" },
       { id:"gas_supply", kind:"choice", section:"utilities", title:"Gas supply", options:["Mains gas","No mains gas","Not sure"] },
+      { id:"gas_meter_location", kind:"text", section:"utilities", title:"Where is the gas meter?", label:"Gas meter location", placeholder:"For example, kitchen cupboard, external box, garage, not sure", showIf:d=>d.gas_supply==="Mains gas" || d.gas_supply==="Not sure" },
       { id:"water_supply", kind:"choice", section:"utilities", title:"Water supply", options:["Mains water","Private supply","Not sure"] },
       { id:"drainage", kind:"choice", section:"utilities", title:"Drainage", options:["Mains drainage","Septic tank","Treatment plant","Cesspit","Other","Not sure"] },
       { id:"water_meter", kind:"choice", section:"utilities", title:"Is there a water meter?", options:["Yes","No","Not sure"] },
+      { id:"water_meter_location", kind:"text", section:"utilities", title:"Where is the water meter?", label:"Water meter location", placeholder:"For example, outside front path, pavement chamber, kitchen cupboard, not sure", showIf:d=>d.water_meter==="Yes" || d.water_meter==="Not sure" },
+      { id:"water_stop_tap_location", kind:"text", section:"utilities", title:"Where is the internal stop tap, if known?", label:"Internal stop tap location", placeholder:"For example, under kitchen sink, utility room, downstairs WC, not sure" },
       { id:"broadband", kind:"choice", section:"utilities", title:"Broadband, if known", options:["Superfast / ultrafast available","Standard broadband only","Poor / limited","Not sure"] },
       { id:"mobile_signal", kind:"choice", section:"utilities", title:"Mobile signal, if known", options:["Generally good","Variable","Poor","Not sure"] },
       { id:"heating_type", kind:"choice", section:"utilities", title:"What type of heating does the property have?", options:["Gas boiler","Electric heating","Oil-fired heating","LPG","Solid fuel","Heat pump","Other","Not sure"] },
       { id:"heating_type_other", kind:"text", section:"utilities", title:"Please add the heating type", label:"Other heating arrangement", placeholder:"Brief details", showIf:d=>d.heating_type==="Other" },
-
-      { id:"boiler_type", kind:"choice", section:"viewing", title:"If there is a boiler, what type is it?", options:["Combi boiler","System boiler","Conventional boiler with hot water tank","No boiler","Not sure"], showIf:d=>["Gas boiler","Oil-fired heating","LPG"].includes(d.heating_type) || d.heating_type==="Not sure" },
+            { id:"boiler_type", kind:"choice", section:"viewing", title:"If there is a boiler, what type is it?", options:["Combi boiler","System boiler","Conventional boiler with hot water tank","No boiler","Not sure"], showIf:d=>["Gas boiler","Oil-fired heating","LPG"].includes(d.heating_type) || d.heating_type==="Not sure" },
       { id:"boiler_location", kind:"choice", section:"viewing", title:"Where is the boiler?", options:["Kitchen","Utility room","Airing cupboard","Loft","Garage","Outbuilding","No boiler","Other","Not sure"], showIf:d=>["Gas boiler","Oil-fired heating","LPG"].includes(d.heating_type) || d.heating_type==="Not sure" },
       { id:"boiler_age", kind:"choice", section:"viewing", title:"Approximate age of the boiler", options:["Under 5 years","5 to 10 years","More than 10 years","No boiler","Not sure"], showIf:d=>["Gas boiler","Oil-fired heating","LPG"].includes(d.heating_type) || d.heating_type==="Not sure" },
       { id:"boiler_serviced", kind:"choice", section:"viewing", title:"Is the boiler serviced annually?", options:["Yes","No","No boiler","Not sure"], showIf:d=>["Gas boiler","Oil-fired heating","LPG"].includes(d.heating_type) || d.heating_type==="Not sure" },
@@ -568,6 +571,24 @@
       saveState();
     }
 
+    function handleTextInput(id, el){
+      if(id === "legal_owner_names"){
+        const lines = el.value.split("\n").map(line =>
+          line.replace(/\b[a-z]/g, c => c.toUpperCase())
+        );
+        el.value = lines.join("\n");
+        data[id] = el.value;
+      } else {
+        data[id] = el.value;
+      }
+      saveState();
+
+      const screen = screens.find(s => s.id === id);
+      if(screen && screen.required){
+        render();
+      }
+    }
+
     function startNew(){
       clearState(true);
       screenId = "consent";
@@ -619,24 +640,13 @@
       return String(v).replace(/\n/g, "<br>");
     }
 
-    function isAnswered(id){
-      const screen = screens.find(s => s.id === id);
-      if(!screen || screen.kind === "notice" || screen.kind === "summary" || screen.kind === "submitted") return true;
-      const val = data[id];
-      if(screen.required){
-        return !!String(val || "").trim();
-      }
-      return true;
-    }
-
     function nextButtonDisabled(screen){
       if(screen.kind === "text" || screen.kind === "textarea"){
         return screen.required && !String(data[screen.id] || "").trim();
       }
       return false;
     }
-
-    function renderNotice(screen){
+        function renderNotice(screen){
       const buttons = (screen.buttons || []).map(b => `
         <button class="btn ${b.style || 'ghost'}" onclick="handleAction('${b.action}')">${escapeHtml(b.label)}</button>
       `).join("");
@@ -673,8 +683,16 @@
         <div class="field">
           <label for="${escapeHtml(screen.id)}">${escapeHtml(screen.label || screen.title)}</label>
           ${isTextArea
-            ? `<textarea id="${escapeHtml(screen.id)}" placeholder="${escapeHtml(screen.placeholder || '')}" oninput="setValue('${screen.id}', this.value)">${escapeHtml(val)}</textarea>`
-            : `<input id="${escapeHtml(screen.id)}" type="text" placeholder="${escapeHtml(screen.placeholder || '')}" value="${escapeHtml(val)}" oninput="setValue('${screen.id}', this.value)" />`
+            ? `<textarea id="${escapeHtml(screen.id)}"
+                placeholder="${escapeHtml(screen.placeholder || '')}"
+                ${screen.id === "legal_owner_names" ? 'style="text-transform:capitalize"' : ""}
+                oninput="handleTextInput('${screen.id}', this)">${escapeHtml(val)}</textarea>`
+            : `<input id="${escapeHtml(screen.id)}"
+                type="text"
+                placeholder="${escapeHtml(screen.placeholder || '')}"
+                value="${escapeHtml(val)}"
+                ${screen.id === "legal_owner_names" ? 'style="text-transform:capitalize"' : ""}
+                oninput="handleTextInput('${screen.id}', this)" />`
           }
         </div>
         ${screen.required ? `<p class="tiny">This answer is required.</p>` : `<p class="tiny">Leave blank if not known.</p>`}
@@ -800,7 +818,7 @@
             <h3>Services and utilities</h3>
             <button class="btn ghost" style="width:auto" onclick="editSection('utilities')">Edit</button>
           </div>
-          <div class="kv">${groupSectionRows(["electricity_supply","gas_supply","water_supply","drainage","water_meter","broadband","mobile_signal","heating_type","heating_type_other"])}</div>
+          <div class="kv">${groupSectionRows(["electricity_supply","electricity_meter_location","gas_supply","gas_meter_location","water_supply","drainage","water_meter","water_meter_location","water_stop_tap_location","broadband","mobile_signal","heating_type","heating_type_other"])}</div>
         </div>
 
         <div class="section-card">
@@ -895,10 +913,14 @@
 
       lines.push("SERVICES AND UTILITIES");
       lines.push(`Electricity: ${data.electricity_supply || "—"}`);
+      lines.push(`Electricity meter location: ${data.electricity_meter_location || "—"}`);
       lines.push(`Gas: ${data.gas_supply || "—"}`);
+      if(data.gas_supply === "Mains gas" || data.gas_supply === "Not sure") lines.push(`Gas meter location: ${data.gas_meter_location || "—"}`);
       lines.push(`Water supply: ${data.water_supply || "—"}`);
       lines.push(`Drainage: ${data.drainage || "—"}`);
       lines.push(`Water meter: ${data.water_meter || "—"}`);
+      if(data.water_meter === "Yes" || data.water_meter === "Not sure") lines.push(`Water meter location: ${data.water_meter_location || "—"}`);
+      lines.push(`Internal stop tap location: ${data.water_stop_tap_location || "—"}`);
       lines.push(`Broadband: ${data.broadband || "—"}`);
       lines.push(`Mobile signal: ${data.mobile_signal || "—"}`);
       lines.push(`Heating type: ${data.heating_type || "—"}${data.heating_type_other ? " - " + data.heating_type_other : ""}`);
@@ -1030,7 +1052,14 @@
       const app = document.getElementById("app");
       const label = document.getElementById("stepLabel");
       const bar = document.getElementById("progressBar");
+      const brandHeader = document.getElementById("brandHeader");
       const screen = screens.find(s => s.id === screenId) || screens[0];
+
+      if (["welcome", "consent"].includes(screenId)) {
+        brandHeader.classList.remove("compact");
+      } else {
+        brandHeader.classList.add("compact");
+      }
 
       if(screen.kind === "submitted"){
         label.textContent = "Complete";
