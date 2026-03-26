@@ -39,16 +39,6 @@
       color:#ffffff;
       padding:8px 12px 20px;
     }
-    .brand h1{
-      margin:0 0 10px;
-      font-family:"Big Caslon", "Big Caslon Medium", Georgia, "Times New Roman", serif;
-      font-size:clamp(2rem, 2vw + 1.2rem, 2.7rem);
-      font-weight:500;
-      line-height:1.05;
-      letter-spacing:.01em;
-      color:#ffffff;
-      text-shadow:0 2px 6px rgba(0,0,0,.22);
-    }
     .brand .logo{
       width:min(125px,38vw);
       display:block;
@@ -317,7 +307,7 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "sm_property_information_form_v1";
+    const STORAGE_KEY = "sm_property_information_form_v2";
     const SUBMISSION_EMAIL = "sales@stephaniemacnab.co.uk";
     const PRIVACY_URL = "https://www.stephaniemacnab.co.uk/privacy-policy/";
     const data = loadState();
@@ -348,6 +338,8 @@
       local_authority: "Local authority",
       parking: "Parking",
       parking_other: "Other parking",
+      parking_basis: "Parking basis",
+      access_type: "Access to property",
       garden_orientation: "Rear garden orientation",
       electricity_supply: "Electricity supply",
       electricity_meter_location: "Electricity meter location",
@@ -358,6 +350,8 @@
       water_meter: "Water meter",
       water_meter_location: "Water meter location",
       water_stop_tap_location: "Internal stop tap location",
+      utilities_issues: "Utility issues",
+      utilities_issues_details: "Utility issue details",
       broadband: "Broadband",
       mobile_signal: "Mobile signal",
       heating_type: "Heating type",
@@ -373,9 +367,13 @@
       loft_light: "Loft light",
       flood_history: "Flooding history",
       flood_details: "Flood details",
+      additional_location_risks: "Other location or environmental risks",
+      additional_location_risks_details: "Other location or environmental risk details",
       structural_issues: "Structural issues",
       structural_details: "Structural details",
       knotweed: "Japanese knotweed",
+      insurance_issues: "Insurance issues",
+      insurance_issues_details: "Insurance issue details",
       neighbour_issues: "Neighbour issues",
       neighbour_issue_details: "Neighbour issue details",
       disputes_complaints: "Disputes or complaints",
@@ -383,12 +381,15 @@
       listed_or_conservation: "Listed / conservation area",
       title_restrictions: "Title restrictions or easements",
       title_restrictions_details: "Title restriction details",
-      planning_works: "Recent works / improvements / upgrades",
-      planning_works_details: "Works details",
-      planning_permission_docs: "Planning / building regs paperwork",
-      guarantees_docs: "Guarantees / certificates",
+      covenant_restrictions: "Restrictions affecting use or alterations",
+      covenant_restrictions_details: "Restriction details",
       rights_of_way: "Rights of way / shared access",
       rights_of_way_details: "Rights of way details",
+      planning_works: "Recent works / improvements / upgrades",
+      planning_works_details: "Works details",
+      planning_works_approval: "Works approval status",
+      planning_permission_docs: "Planning / building regs paperwork",
+      guarantees_docs: "Guarantees / certificates",
       lease_years_remaining: "Lease years remaining",
       ground_rent: "Ground rent",
       service_charge: "Service charge",
@@ -396,13 +397,15 @@
       major_works: "Major works expected",
       lease_restrictions: "Lease restrictions",
       solar_panels: "Solar panels",
+      solar_panels_basis: "Solar panels ownership / agreement",
       ev_charger: "EV charger",
       alarm_cctv: "Alarm / CCTV",
       outbuildings: "Outbuildings / garden room",
       solicitor_details: "Solicitor details",
       epc_available: "EPC available",
       declaration_name: "Your name",
-      declaration_email: "Email address"
+      declaration_email: "Email address",
+      declaration_confirm: "Declaration confirmation"
     };
 
     const sectionTitles = {
@@ -448,6 +451,7 @@
           { label: "I understand, continue", style: "primary", action: "next" }
         ]
       },
+
       { id:"address_line_1", kind:"text", section:"property", title:"Property address", label:"Address line 1", placeholder:"House number and street", required:true },
       { id:"address_line_2", kind:"text", section:"property", title:"Property address", label:"Address line 2", placeholder:"Area or locality, if needed" },
       { id:"town_city", kind:"text", section:"property", title:"Town or city", label:"Town or city", placeholder:"Town or city", required:true },
@@ -477,6 +481,8 @@
       { id:"local_authority", kind:"text", section:"material", title:"Local authority", label:"Local authority", placeholder:"Council name" },
       { id:"parking", kind:"choice", section:"material", title:"Parking", options:["Driveway","Garage","Allocated space","On-street","Permit","No parking","Other","Not sure"] },
       { id:"parking_other", kind:"text", section:"material", title:"Please add parking details", label:"Other parking arrangement", placeholder:"Brief details", showIf:d=>d.parking==="Other" },
+      { id:"parking_basis", kind:"choice", section:"material", title:"What is the legal basis of the parking, if known?", options:["Owned within title","Allocated","Shared","Informal / on-street","Not sure"], showIf:d=>["Driveway","Garage","Allocated space","Permit","Other"].includes(d.parking) },
+      { id:"access_type", kind:"choice", section:"material", title:"How is the property accessed?", options:["Direct from a public highway","Via a shared or private road","Pedestrian access only","Not sure"] },
       { id:"garden_orientation", kind:"choice", section:"material", title:"Rear garden orientation, if known", options:["North","South","East","West","North-east","North-west","South-east","South-west","No rear garden","Not sure"] },
 
       { id:"friendly_2", kind:"notice", section:"Progress update", title:"You are doing well", body:["This next section helps us answer the usual buyer questions at the viewing, rather than having to ring the office afterwards.","That tends to make viewings smoother and more efficient for everyone."], buttons:[{label:"Continue",style:"primary",action:"next"}] },
@@ -490,11 +496,14 @@
       { id:"water_meter", kind:"choice", section:"utilities", title:"Is there a water meter?", options:["Yes","No","Not sure"] },
       { id:"water_meter_location", kind:"text", section:"utilities", title:"Where is the water meter?", label:"Water meter location", placeholder:"For example, outside front path, pavement chamber, kitchen cupboard, not sure", showIf:d=>d.water_meter==="Yes" || d.water_meter==="Not sure" },
       { id:"water_stop_tap_location", kind:"text", section:"utilities", title:"Where is the internal stop tap, if known?", label:"Internal stop tap location", placeholder:"For example, under kitchen sink, utility room, downstairs WC, not sure" },
+      { id:"utilities_issues", kind:"choice", section:"utilities", title:"Are you aware of any issues with water pressure, drainage performance or utility connections?", options:["No","Yes","Not sure"] },
+      { id:"utilities_issues_details", kind:"textarea", section:"utilities", title:"Please add brief details", label:"Utility issue details", placeholder:"Brief details", showIf:d=>d.utilities_issues==="Yes" },
       { id:"broadband", kind:"choice", section:"utilities", title:"Broadband, if known", options:["Superfast / ultrafast available","Standard broadband only","Poor / limited","Not sure"] },
       { id:"mobile_signal", kind:"choice", section:"utilities", title:"Mobile signal, if known", options:["Generally good","Variable","Poor","Not sure"] },
       { id:"heating_type", kind:"choice", section:"utilities", title:"What type of heating does the property have?", options:["Gas boiler","Electric heating","Oil-fired heating","LPG","Solid fuel","Heat pump","Other","Not sure"] },
       { id:"heating_type_other", kind:"text", section:"utilities", title:"Please add the heating type", label:"Other heating arrangement", placeholder:"Brief details", showIf:d=>d.heating_type==="Other" },
-            { id:"boiler_type", kind:"choice", section:"viewing", title:"If there is a boiler, what type is it?", options:["Combi boiler","System boiler","Conventional boiler with hot water tank","No boiler","Not sure"], showIf:d=>["Gas boiler","Oil-fired heating","LPG"].includes(d.heating_type) || d.heating_type==="Not sure" },
+
+      { id:"boiler_type", kind:"choice", section:"viewing", title:"If there is a boiler, what type is it?", options:["Combi boiler","System boiler","Conventional boiler with hot water tank","No boiler","Not sure"], showIf:d=>["Gas boiler","Oil-fired heating","LPG"].includes(d.heating_type) || d.heating_type==="Not sure" },
       { id:"boiler_location", kind:"choice", section:"viewing", title:"Where is the boiler?", options:["Kitchen","Utility room","Airing cupboard","Loft","Garage","Outbuilding","No boiler","Other","Not sure"], showIf:d=>["Gas boiler","Oil-fired heating","LPG"].includes(d.heating_type) || d.heating_type==="Not sure" },
       { id:"boiler_age", kind:"choice", section:"viewing", title:"Approximate age of the boiler", options:["Under 5 years","5 to 10 years","More than 10 years","No boiler","Not sure"], showIf:d=>["Gas boiler","Oil-fired heating","LPG"].includes(d.heating_type) || d.heating_type==="Not sure" },
       { id:"boiler_serviced", kind:"choice", section:"viewing", title:"Is the boiler serviced annually?", options:["Yes","No","No boiler","Not sure"], showIf:d=>["Gas boiler","Oil-fired heating","LPG"].includes(d.heating_type) || d.heating_type==="Not sure" },
@@ -504,15 +513,20 @@
       { id:"loft_access", kind:"choice", section:"viewing", title:"What is the loft access?", options:["Fixed ladder","Pull-down ladder","Hatch only","Not sure"], showIf:d=>d.loft_present==="Yes" || d.loft_present==="Not sure" },
       { id:"loft_light", kind:"choice", section:"viewing", title:"Is there a fixed light in the loft?", options:["Yes","No","Not sure"], showIf:d=>d.loft_present==="Yes" || d.loft_present==="Not sure" },
       { id:"solar_panels", kind:"choice", section:"viewing", title:"Are there solar panels?", options:["Yes","No","Not sure"] },
+      { id:"solar_panels_basis", kind:"choice", section:"viewing", title:"If there are solar panels, are they owned outright or subject to an agreement?", options:["Owned outright","Subject to a lease or other agreement","Not sure"], showIf:d=>d.solar_panels==="Yes" || d.solar_panels==="Not sure" },
       { id:"ev_charger", kind:"choice", section:"viewing", title:"Is there an EV charger?", options:["Yes","No","Not sure"] },
       { id:"alarm_cctv", kind:"choice", section:"viewing", title:"Is there an alarm or CCTV system?", options:["Alarm only","CCTV only","Both","No","Not sure"] },
       { id:"outbuildings", kind:"choice", section:"viewing", title:"Any outbuildings, garden room or home office?", options:["Yes","No","Not sure"] },
 
       { id:"flood_history", kind:"choice", section:"risk", title:"Has the property ever flooded, to your knowledge?", options:["No","Yes","Not sure"] },
       { id:"flood_details", kind:"textarea", section:"risk", title:"Please add brief flood details", label:"Flood details", placeholder:"When, how serious, and whether works were carried out", showIf:d=>d.flood_history==="Yes" },
+      { id:"additional_location_risks", kind:"choice", section:"risk", title:"Are you aware of any other location or environmental risks affecting the property, such as coastal erosion, mining or ground stability issues, or radon?", options:["No","Yes","Not sure"] },
+      { id:"additional_location_risks_details", kind:"textarea", section:"risk", title:"Please add brief details", label:"Other location or environmental risk details", placeholder:"Brief details", showIf:d=>d.additional_location_risks==="Yes" },
       { id:"structural_issues", kind:"choice", section:"risk", title:"Any known structural movement, subsidence or structural issues?", options:["No","Yes","Not sure"] },
       { id:"structural_details", kind:"textarea", section:"risk", title:"Please add brief details", label:"Structural issue details", placeholder:"Brief details", showIf:d=>d.structural_issues==="Yes" },
       { id:"knotweed", kind:"choice", section:"risk", title:"Is there any known Japanese knotweed?", options:["No","Yes","Not sure"] },
+      { id:"insurance_issues", kind:"choice", section:"risk", title:"Have there been any insurance claims, difficulty obtaining insurance, or increased premiums due to property-related risks?", options:["No","Yes","Not sure"] },
+      { id:"insurance_issues_details", kind:"textarea", section:"risk", title:"Please add brief details", label:"Insurance issue details", placeholder:"Brief details", showIf:d=>d.insurance_issues==="Yes" },
       { id:"neighbour_issues", kind:"choice", section:"risk", title:"Any issues with neighbours that a buyer should know about?", options:["No","Yes","Prefer not to say","Not sure"] },
       { id:"neighbour_issue_details", kind:"textarea", section:"risk", title:"Please add brief details", label:"Neighbour issue details", placeholder:"Brief details", showIf:d=>d.neighbour_issues==="Yes" },
       { id:"disputes_complaints", kind:"choice", section:"risk", title:"Any ongoing or previous disputes or complaints affecting the property?", options:["No","Yes","Not sure"] },
@@ -520,13 +534,16 @@
       { id:"listed_or_conservation", kind:"choice", section:"risk", title:"Is the property listed or in a conservation area?", options:["Neither","Listed","Conservation area","Both","Not sure"] },
       { id:"title_restrictions", kind:"choice", section:"risk", title:"Any known title restrictions, easements or covenants a buyer should know about?", options:["No","Yes","Not sure"] },
       { id:"title_restrictions_details", kind:"textarea", section:"risk", title:"Please add brief details", label:"Title restriction details", placeholder:"Brief details", showIf:d=>d.title_restrictions==="Yes" },
+      { id:"covenant_restrictions", kind:"choice", section:"risk", title:"Do any known restrictions affect alterations, use of the property, parking of vehicles, or business use?", options:["No","Yes","Not sure"] },
+      { id:"covenant_restrictions_details", kind:"textarea", section:"risk", title:"Please add brief details", label:"Restriction details", placeholder:"Brief details", showIf:d=>d.covenant_restrictions==="Yes" },
       { id:"rights_of_way", kind:"choice", section:"risk", title:"Any rights of way, shared access or shared driveway arrangements?", options:["No","Yes","Not sure"] },
       { id:"rights_of_way_details", kind:"textarea", section:"risk", title:"Please add brief details", label:"Shared access / rights of way details", placeholder:"Brief details", showIf:d=>d.rights_of_way==="Yes" },
       { id:"planning_works", kind:"choice", section:"risk", title:"Have there been any recent works, improvements or upgrades?", options:["No","Yes","Not sure"] },
       { id:"planning_works_details", kind:"textarea", section:"risk", title:"Please detail the works and when they were undertaken", label:"Works, improvements or upgrades", placeholder:"For example: uPVC replacement windows August 2023, new boiler 2021, kitchen refit 2019", showIf:d=>d.planning_works==="Yes" },
+      { id:"planning_works_approval", kind:"choice", section:"risk", title:"Were those works carried out with the necessary planning permission and / or building regulations approval, if applicable?", options:["Yes","No","Not required","Not sure"], showIf:d=>d.planning_works==="Yes" },
       { id:"planning_permission_docs", kind:"choice", section:"risk", title:"Do you have the relevant planning permission / building regulations paperwork, if applicable?", options:["Yes","No","Not applicable","Not sure"], showIf:d=>d.planning_works==="Yes" },
       { id:"guarantees_docs", kind:"choice", section:"risk", title:"Do you have any guarantees, warranties or completion certificates for the works?", options:["Yes","No","Not applicable","Not sure"], showIf:d=>d.planning_works==="Yes" },
-   
+
       { id:"friendly_3", kind:"notice", section:"Progress update", title:"Almost there", body:["A few final details now help us present the property clearly and identify anything we should tidy up before marketing starts.","Thank you for sticking with it."], buttons:[{label:"Continue",style:"primary",action:"next"}] },
 
       { id:"lease_years_remaining", kind:"text", section:"leasehold", title:"How many years are left on the lease, if known?", label:"Years remaining on lease", placeholder:"For example, 112", showIf:d=>["Leasehold","Share of freehold"].includes(d.tenure) },
@@ -540,6 +557,7 @@
       { id:"solicitor_details", kind:"textarea", section:"docs", title:"Solicitor details, if known", label:"Solicitor details", placeholder:"Firm, contact name, phone or email, if already instructed" },
       { id:"declaration_name", kind:"text", section:"docs", title:"Your name", label:"Please add your name", placeholder:"Your full name", required:true },
       { id:"declaration_email", kind:"text", section:"docs", title:"Email address", label:"Please add your email address", placeholder:"Email address", required:true },
+      { id:"declaration_confirm", kind:"choice", section:"docs", title:"Please confirm the statement below", options:["I confirm this information is accurate to the best of my knowledge and I have not knowingly withheld anything that may affect a buyer’s decision","I am not able to confirm this"], required:true },
 
       { id:"summary", kind:"summary" },
       { id:"submitted", kind:"submitted" }
@@ -580,23 +598,23 @@
     }
 
     function goNext(){
-  const current = screens.find(s => s.id === screenId);
+      const current = screens.find(s => s.id === screenId);
 
-  if(current && (current.kind === "text" || current.kind === "textarea") && current.required){
-    if(!String(data[current.id] || "").trim()){
-      alert("Please complete this field before continuing.");
-      return;
+      if(current && (current.kind === "text" || current.kind === "textarea") && current.required){
+        if(!String(data[current.id] || "").trim()){
+          alert("Please complete this field before continuing.");
+          return;
+        }
+      }
+
+      const vis = visibleScreens();
+      const idx = vis.findIndex(s => s.id === screenId);
+      if(idx >= 0 && idx < vis.length - 1){
+        screenId = vis[idx + 1].id;
+      }
+      saveState();
+      render();
     }
-  }
-
-  const vis = visibleScreens();
-  const idx = vis.findIndex(s => s.id === screenId);
-  if(idx >= 0 && idx < vis.length - 1){
-    screenId = vis[idx + 1].id;
-  }
-  saveState();
-  render();
-}
 
     function goPrev(){
       const vis = visibleScreens();
@@ -616,7 +634,7 @@
     function handleTextInput(id, el){
       if(id === "legal_owner_names"){
         const lines = el.value.split("\n").map(line =>
-        line.replace(/\b[a-z]/g, c => c.toUpperCase())
+          line.replace(/\b[a-z]/g, c => c.toUpperCase())
         );
         el.value = lines.join("\n");
         data[id] = el.value;
@@ -626,7 +644,7 @@
 
       saveState();
     }
-    
+
     function startNew(){
       clearState(true);
       screenId = "consent";
@@ -679,8 +697,8 @@
     }
 
     function nextButtonDisabled(screen){
-  return false;
-}
+      return false;
+    }
         function renderNotice(screen){
       const buttons = (screen.buttons || []).map(b => `
         <button class="btn ${b.style || 'ghost'}" onclick="handleAction('${b.action}')">${escapeHtml(b.label)}</button>
@@ -776,20 +794,36 @@
          (!data.lease_years_remaining || !data.service_charge || !data.ground_rent)){
         flags.push("Leasehold information appears incomplete and should be checked with the client or solicitor.");
       }
+      if(data.parking && ["Driveway","Garage","Allocated space","Permit","Other"].includes(data.parking) &&
+         (!data.parking_basis || data.parking_basis === "Not sure")){
+        flags.push("Parking exists but the legal basis should be checked.");
+      }
+      if(data.access_type === "Via a shared or private road"){
+        flags.push("Access is via a shared or private road. Check rights and maintenance responsibility.");
+      }
+      if(data.utilities_issues === "Yes"){
+        flags.push("Utility issue disclosed. Review before marketing wording is finalised.");
+      }
+      if(data.planning_works === "Yes" && ["No","Not sure"].includes(data.planning_works_approval || "")){
+        flags.push("Recent works reported but approval status is unclear or negative. Review before marketing.");
+      }
       if(data.planning_works === "Yes" && ["No","Not sure"].includes(data.planning_permission_docs || "")){
         flags.push("Recent works reported but planning / building regulations paperwork may need checking.");
       }
       if(data.planning_works === "Yes" && ["No","Not sure"].includes(data.guarantees_docs || "")){
         flags.push("Recent works reported but guarantees, certificates or warranties may need checking.");
       }
+      if(data.insurance_issues === "Yes"){
+        flags.push("Insurance issue disclosed. Clarify nature and current position.");
+      }
       if(data.neighbour_issues === "Yes" || data.disputes_complaints === "Yes"){
         flags.push("Neighbour issue or dispute disclosed. Review before marketing wording is finalised.");
       }
-      if(data.title_restrictions === "Yes" || data.rights_of_way === "Yes"){
-        flags.push("Title, access or easement issue disclosed. Check title and solicitor input.");
+      if(data.title_restrictions === "Yes" || data.rights_of_way === "Yes" || data.covenant_restrictions === "Yes"){
+        flags.push("Title, access or covenant issue disclosed. Check title and solicitor input.");
       }
-      if(data.flood_history === "Yes"){
-        flags.push("Flooding has been disclosed. Clarify extent and any remedial works.");
+      if(data.flood_history === "Yes" || data.additional_location_risks === "Yes"){
+        flags.push("Environmental or location risk disclosed. Clarify extent and any supporting information.");
       }
       if(data.structural_issues === "Yes"){
         flags.push("Structural issue disclosed. Check details and supporting paperwork if available.");
@@ -805,6 +839,12 @@
       }
       if(data.listed_or_conservation === "Listed" || data.listed_or_conservation === "Both" || data.listed_or_conservation === "Conservation area"){
         flags.push("Listed or conservation area status may affect marketing wording and works history.");
+      }
+      if(data.solar_panels === "Yes" && (!data.solar_panels_basis || data.solar_panels_basis === "Not sure")){
+        flags.push("Solar panels disclosed. Ownership or agreement basis should be confirmed.");
+      }
+      if(data.declaration_confirm === "I am not able to confirm this"){
+        flags.push("Seller has not confirmed the declaration. Manual review required before marketing.");
       }
       return flags;
     }
@@ -845,7 +885,7 @@
             <h3>Material information</h3>
             <button class="btn ghost" style="width:auto" onclick="editSection('material')">Edit</button>
           </div>
-          <div class="kv">${groupSectionRows(["council_tax_band","local_authority","parking","parking_other","garden_orientation"])}</div>
+          <div class="kv">${groupSectionRows(["council_tax_band","local_authority","parking","parking_other","parking_basis","access_type","garden_orientation"])}</div>
         </div>
 
         <div class="section-card">
@@ -853,7 +893,7 @@
             <h3>Services and utilities</h3>
             <button class="btn ghost" style="width:auto" onclick="editSection('utilities')">Edit</button>
           </div>
-          <div class="kv">${groupSectionRows(["electricity_supply","electricity_meter_location","gas_supply","gas_meter_location","water_supply","drainage","water_meter","water_meter_location","water_stop_tap_location","broadband","mobile_signal","heating_type","heating_type_other"])}</div>
+          <div class="kv">${groupSectionRows(["electricity_supply","electricity_meter_location","gas_supply","gas_meter_location","water_supply","drainage","water_meter","water_meter_location","water_stop_tap_location","utilities_issues","utilities_issues_details","broadband","mobile_signal","heating_type","heating_type_other"])}</div>
         </div>
 
         <div class="section-card">
@@ -861,7 +901,7 @@
             <h3>Viewing information</h3>
             <button class="btn ghost" style="width:auto" onclick="editSection('viewing')">Edit</button>
           </div>
-          <div class="kv">${groupSectionRows(["boiler_type","boiler_location","boiler_age","boiler_serviced","hot_water_cylinder","loft_present","loft_boarded","loft_access","loft_light","solar_panels","ev_charger","alarm_cctv","outbuildings"])}</div>
+          <div class="kv">${groupSectionRows(["boiler_type","boiler_location","boiler_age","boiler_serviced","hot_water_cylinder","loft_present","loft_boarded","loft_access","loft_light","solar_panels","solar_panels_basis","ev_charger","alarm_cctv","outbuildings"])}</div>
         </div>
 
         <div class="section-card">
@@ -869,7 +909,7 @@
             <h3>Risks, restrictions and works</h3>
             <button class="btn ghost" style="width:auto" onclick="editSection('risk')">Edit</button>
           </div>
-          <div class="kv">${groupSectionRows(["flood_history","flood_details","structural_issues","structural_details","knotweed","neighbour_issues","neighbour_issue_details","disputes_complaints","disputes_details","listed_or_conservation","title_restrictions","title_restrictions_details","rights_of_way","rights_of_way_details","planning_works","planning_works_details","planning_permission_docs","guarantees_docs"])}</div>
+          <div class="kv">${groupSectionRows(["flood_history","flood_details","additional_location_risks","additional_location_risks_details","structural_issues","structural_details","knotweed","insurance_issues","insurance_issues_details","neighbour_issues","neighbour_issue_details","disputes_complaints","disputes_details","listed_or_conservation","title_restrictions","title_restrictions_details","covenant_restrictions","covenant_restrictions_details","rights_of_way","rights_of_way_details","planning_works","planning_works_details","planning_works_approval","planning_permission_docs","guarantees_docs"])}</div>
         </div>
 
         ${["Leasehold","Share of freehold"].includes(data.tenure) ? `
@@ -887,7 +927,7 @@
             <h3>Documents and contacts</h3>
             <button class="btn ghost" style="width:auto" onclick="editSection('docs')">Edit</button>
           </div>
-          <div class="kv">${groupSectionRows(["epc_available","solicitor_details","declaration_name","declaration_email"])}</div>
+          <div class="kv">${groupSectionRows(["epc_available","solicitor_details","declaration_name","declaration_email","declaration_confirm"])}</div>
         </div>
 
         ${flags.length ? `
@@ -909,8 +949,7 @@
         <p class="tiny">Submitting will open your email app with a pre-filled report to ${escapeHtml(SUBMISSION_EMAIL)}. Once sent, the saved answers on this device will be cleared.</p>
       `;
     }
-
-    function buildReport(){
+        function buildReport(){
       const flags = generateFlags();
       const lines = [];
       const join = (...parts) => parts.filter(Boolean).join(", ");
@@ -943,6 +982,8 @@
       lines.push(`Council Tax band: ${data.council_tax_band || "—"}`);
       lines.push(`Local authority: ${data.local_authority || "—"}`);
       lines.push(`Parking: ${data.parking || "—"}${data.parking_other ? " - " + data.parking_other : ""}`);
+      if(data.parking_basis) lines.push(`Parking basis: ${data.parking_basis}`);
+      if(data.access_type) lines.push(`Access to property: ${data.access_type}`);
       lines.push(`Rear garden orientation: ${data.garden_orientation || "—"}`);
       lines.push("");
 
@@ -956,6 +997,8 @@
       lines.push(`Water meter: ${data.water_meter || "—"}`);
       if(data.water_meter === "Yes" || data.water_meter === "Not sure") lines.push(`Water meter location: ${data.water_meter_location || "—"}`);
       lines.push(`Internal stop tap location: ${data.water_stop_tap_location || "—"}`);
+      if(data.utilities_issues) lines.push(`Utility issues: ${data.utilities_issues}`);
+      if(data.utilities_issues_details) lines.push(`Utility issue details: ${cleanOneLine(data.utilities_issues_details)}`);
       lines.push(`Broadband: ${data.broadband || "—"}`);
       lines.push(`Mobile signal: ${data.mobile_signal || "—"}`);
       lines.push(`Heating type: ${data.heating_type || "—"}${data.heating_type_other ? " - " + data.heating_type_other : ""}`);
@@ -972,6 +1015,7 @@
       if(data.loft_access) lines.push(`Loft access: ${data.loft_access}`);
       if(data.loft_light) lines.push(`Loft light: ${data.loft_light}`);
       lines.push(`Solar panels: ${data.solar_panels || "—"}`);
+      if(data.solar_panels_basis) lines.push(`Solar panels ownership / agreement: ${data.solar_panels_basis}`);
       lines.push(`EV charger: ${data.ev_charger || "—"}`);
       lines.push(`Alarm / CCTV: ${data.alarm_cctv || "—"}`);
       lines.push(`Outbuildings / garden room: ${data.outbuildings || "—"}`);
@@ -980,9 +1024,13 @@
       lines.push("RISKS, RESTRICTIONS AND WORKS");
       lines.push(`Flooding history: ${data.flood_history || "—"}`);
       if(data.flood_details) lines.push(`Flood details: ${cleanOneLine(data.flood_details)}`);
+      if(data.additional_location_risks) lines.push(`Other location or environmental risks: ${data.additional_location_risks}`);
+      if(data.additional_location_risks_details) lines.push(`Other location or environmental risk details: ${cleanOneLine(data.additional_location_risks_details)}`);
       lines.push(`Structural issues: ${data.structural_issues || "—"}`);
       if(data.structural_details) lines.push(`Structural details: ${cleanOneLine(data.structural_details)}`);
       lines.push(`Japanese knotweed: ${data.knotweed || "—"}`);
+      if(data.insurance_issues) lines.push(`Insurance issues: ${data.insurance_issues}`);
+      if(data.insurance_issues_details) lines.push(`Insurance issue details: ${cleanOneLine(data.insurance_issues_details)}`);
       lines.push(`Neighbour issues: ${data.neighbour_issues || "—"}`);
       if(data.neighbour_issue_details) lines.push(`Neighbour details: ${cleanOneLine(data.neighbour_issue_details)}`);
       lines.push(`Disputes / complaints: ${data.disputes_complaints || "—"}`);
@@ -990,10 +1038,13 @@
       lines.push(`Listed / conservation area: ${data.listed_or_conservation || "—"}`);
       lines.push(`Title restrictions / easements: ${data.title_restrictions || "—"}`);
       if(data.title_restrictions_details) lines.push(`Title details: ${cleanOneLine(data.title_restrictions_details)}`);
+      if(data.covenant_restrictions) lines.push(`Restrictions affecting use or alterations: ${data.covenant_restrictions}`);
+      if(data.covenant_restrictions_details) lines.push(`Restriction details: ${cleanOneLine(data.covenant_restrictions_details)}`);
       lines.push(`Rights of way / shared access: ${data.rights_of_way || "—"}`);
       if(data.rights_of_way_details) lines.push(`Rights of way details: ${cleanOneLine(data.rights_of_way_details)}`);
       lines.push(`Recent works / improvements / upgrades: ${data.planning_works || "—"}`);
       if(data.planning_works_details) lines.push(`Works details: ${cleanOneLine(data.planning_works_details)}`);
+      if(data.planning_works_approval) lines.push(`Works approval status: ${data.planning_works_approval}`);
       if(data.planning_permission_docs) lines.push(`Planning / building regs paperwork: ${data.planning_permission_docs}`);
       if(data.guarantees_docs) lines.push(`Guarantees / certificates: ${data.guarantees_docs}`);
       lines.push("");
@@ -1014,6 +1065,7 @@
       lines.push(`Solicitor details: ${cleanOneLine(data.solicitor_details) || "—"}`);
       lines.push(`Submitted by: ${data.declaration_name || "—"}`);
       lines.push(`Email: ${data.declaration_email || "—"}`);
+      lines.push(`Declaration confirmation: ${data.declaration_confirm || "—"}`);
       lines.push("");
 
       lines.push("FLAGS FOR FOLLOW-UP");
@@ -1038,6 +1090,10 @@
         alert("Please add your name and email address before submitting.");
         editSection("docs");
         return;
+      }
+      if(data.declaration_confirm === "I am not able to confirm this"){
+        const proceed = confirm("You have indicated that you are not able to confirm the declaration. Do you still want to continue and send the form for manual review?");
+        if(!proceed) return;
       }
       const subject = `Property Information Form - ${cleanOneLine([data.address_line_1, data.postcode].filter(Boolean).join(", ")) || "Submission"}`;
       const body = buildReport();
