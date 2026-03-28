@@ -504,11 +504,11 @@
       },
 
       {
-        id: "address_check",
+      id: "address_check",
         kind: "address_check",
         section: "property",
         title: "Please confirm the property address",
-        showIf: d => !!(d.address_house_number || d.address_street || d.address_area || d.town_city || d.postcode)
+        showIf: d => !!(d.address_house_number && d.address_street && d.town_city && d.postcode)
       },
 
       { id:"address_house_number", kind:"text", section:"property", title:"Property address", label:"House number / name", placeholder:"For example, 12 or Rose Cottage", required:true },
