@@ -307,15 +307,59 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "sm_property_information_form_v3";
+    const STORAGE_KEY = "sm_property_information_form_v5";
     const SUBMISSION_EMAIL = "sales@stephaniemacnab.co.uk";
     const PRIVACY_URL = "https://www.stephaniemacnab.co.uk/privacy-policy/";
     const data = loadState();
     let screenId = data.__screenId || "welcome";
 
+    function loadState(){
+      try{
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+      }catch(e){
+        return {};
+      }
+    }
+
+    function getQueryPrefill(){
+      const params = new URLSearchParams(window.location.search);
+      return {
+        address_house_number: params.get("house") || "",
+        address_street: params.get("street") || "",
+        address_area: params.get("area") || "",
+        town_city: params.get("town") || "",
+        postcode: params.get("postcode") || "",
+        declaration_name: params.get("name") || "",
+        declaration_email: params.get("email") || "",
+        declaration_mobile: params.get("mobile") || ""
+      };
+    }
+
+    function applyQueryPrefill(){
+      const prefill = getQueryPrefill();
+      Object.keys(prefill).forEach(key => {
+        if (prefill[key] && !data[key]) {
+          data[key] = prefill[key];
+        }
+      });
+    }
+
+    function formattedAddress(){
+      return [
+        data.address_house_number,
+        data.address_street,
+        data.address_area,
+        data.town_city,
+        data.postcode
+      ].filter(Boolean).join(", ");
+    }
+
+    applyQueryPrefill();
+
     const fieldLabels = {
-      address_line_1: "Address line 1",
-      address_line_2: "Address line 2",
+      address_house_number: "House number / name",
+      address_street: "Street",
+      address_area: "Area",
       town_city: "Town or city",
       postcode: "Postcode",
       property_type: "Property type",
@@ -357,6 +401,9 @@
       utilities_issues_details: "Utility issue details",
       broadband: "Broadband",
       mobile_signal: "Mobile signal",
+      construction_type: "Construction type",
+      epc_available: "EPC available",
+      smoke_co_alarms: "Smoke / CO alarms",
       heating_type: "Heating type",
       heating_type_other: "Other heating type",
       boiler_type: "Boiler type",
@@ -405,9 +452,9 @@
       alarm_cctv: "Alarm / CCTV",
       outbuildings: "Outbuildings / garden room",
       solicitor_details: "Solicitor details",
-      epc_available: "EPC available",
       declaration_name: "Your name",
       declaration_email: "Email address",
+      declaration_mobile: "Mobile number",
       declaration_confirm: "Declaration confirmation"
     };
 
@@ -430,8 +477,9 @@
         section: "Getting started",
         title: "Before you begin",
         body: [
-          "This form is designed to keep things tidy at the outset. It helps us collect the information we need for marketing, disclosure and viewings, without asking unnecessary questions.",
-          "Your answers save automatically on this device. You can come back later and continue from where you left off."
+          "As professional estate agents, we are required to comply with current regulations and legislation relating to Material Information. That means we need to gather certain key details about your property before it is launched to the market.",
+          "This form collects that essential information first, then moves on to a few practical details that help us with marketing, viewings and answering buyer questions.",
+          "If you are unsure about anything, please choose Not sure or leave the field blank where that option is available."
         ],
         footerHtml: `Our privacy policy is available <a href="${PRIVACY_URL}" target="_blank" rel="noopener">here</a>.`,
         buttons: [
@@ -455,15 +503,25 @@
         ]
       },
 
-      { id:"address_line_1", kind:"text", section:"property", title:"Property address", label:"Address line 1", placeholder:"House number and street", required:true },
-      { id:"address_line_2", kind:"text", section:"property", title:"Property address", label:"Address line 2", placeholder:"Area or locality, if needed" },
+      {
+        id: "address_check",
+        kind: "address_check",
+        section: "property",
+        title: "Please confirm the property address",
+        showIf: d => !!(d.address_house_number || d.address_street || d.address_area || d.town_city || d.postcode)
+      },
+
+      { id:"address_house_number", kind:"text", section:"property", title:"Property address", label:"House number / name", placeholder:"For example, 12 or Rose Cottage", required:true },
+      { id:"address_street", kind:"text", section:"property", title:"Property address", label:"Street", placeholder:"Street", required:true },
+      { id:"address_area", kind:"text", section:"property", title:"Property address", label:"Area", placeholder:"Area or locality, if needed" },
       { id:"town_city", kind:"text", section:"property", title:"Town or city", label:"Town or city", placeholder:"Town or city", required:true },
       { id:"postcode", kind:"text", section:"property", title:"Postcode", label:"Postcode", placeholder:"Postcode", required:true },
+
       { id:"property_type", kind:"choice", section:"property", title:"What type of property is it?", options:["Detached house","Semi-detached house","Terraced house","Bungalow","Flat or apartment","Maisonette","Other","Not sure"] },
       { id:"property_type_other", kind:"text", section:"property", title:"Please add the property type", label:"Other property type", placeholder:"Brief description", showIf:d=>d.property_type==="Other" },
       { id:"tenure", kind:"choice", section:"property", title:"What is the tenure?", options:["Freehold","Leasehold","Share of freehold","Commonhold","Not sure"] },
 
-      { id:"friendly_1", kind:"notice", section:"Progress update", title:"A quick pause", body:["We know this can feel a little detailed.","Getting this sorted at the outset helps us avoid delays once the property goes live and cuts down the number of follow-up questions later."], buttons:[{label:"Continue",style:"primary",action:"next"}] },
+      { id:"friendly_1", kind:"notice", section:"Material Information", title:"Material Information first", body:["The next section covers the key details we need in order to comply with current Material Information requirements before the property is marketed.","After that, we move on to a few more practical points that help with photography, brochure wording, viewings and buyer enquiries."], buttons:[{label:"Continue",style:"primary",action:"next"}] },
 
       { id:"acting_role", kind:"choice", section:"ownership", title:"Are you dealing with the sale on your own behalf or for someone else?", options:["On my own behalf","For a relative","For an estate","For a company or trust","Other"] },
       { id:"acting_role_other", kind:"text", section:"ownership", title:"Please add a short note", label:"Other arrangement", placeholder:"Brief details", showIf:d=>d.acting_role==="Other" },
@@ -481,14 +539,16 @@
       { id:"vacant_reason_other", kind:"text", section:"occupancy", title:"Please add a short note", label:"Reason property is vacant", placeholder:"Brief details", showIf:d=>d.vacant_reason==="Other" },
 
       { id:"council_tax_band", kind:"choice", section:"material", title:"Council Tax band", options:["A","B","C","D","E","F","G","H","Not sure"] },
-      { id:"local_authority", kind:"text", section:"material", title:"Local authority", label:"Local authority", placeholder:"Council name" },
+      { id:"local_authority", kind:"choice", section:"material", title:"Local authority", options:["Sefton","West Lancashire","Liverpool City Council","Other","Not sure"] },
       { id:"parking", kind:"choice", section:"material", title:"Parking", options:["Driveway","Garage","Allocated space","On-street","Permit","No parking","Other","Not sure"] },
       { id:"parking_other", kind:"text", section:"material", title:"Please add parking details", label:"Other parking arrangement", placeholder:"Brief details", showIf:d=>d.parking==="Other" },
       { id:"parking_basis", kind:"choice", section:"material", title:"What is the legal basis of the parking, if known?", options:["Owned within title","Allocated","Shared","Informal / on-street","Not sure"], showIf:d=>["Driveway","Garage","Allocated space","Permit","Other"].includes(d.parking) },
       { id:"access_type", kind:"choice", section:"material", title:"How is the property accessed?", options:["Direct from a public highway","Via a shared or private road","Pedestrian access only","Not sure"] },
       { id:"garden_orientation", kind:"choice", section:"material", title:"Rear garden orientation, if known", options:["North","South","East","West","North-east","North-west","South-east","South-west","No rear garden","Not sure"] },
-
-      { id:"friendly_2", kind:"notice", section:"Progress update", title:"You are doing well", body:["This next section helps us answer the usual buyer questions at the viewing, rather than having to ring the office afterwards.","That tends to make viewings smoother and more efficient for everyone."], buttons:[{label:"Continue",style:"primary",action:"next"}] },
+      { id:"construction_type", kind:"choice", section:"material", title:"Construction type, if known", options:["Standard construction","Non-standard construction","Not sure"] },
+      { id:"epc_available", kind:"choice", section:"material", title:"Do you have an EPC, or have you previously had one?", options:["Yes","No","Not sure"] },
+      { id:"smoke_co_alarms", kind:"choice", section:"material", title:"Are smoke alarms and carbon monoxide alarms installed, if applicable?", options:["Yes","No","Not sure"] },
+            { id:"friendly_2", kind:"notice", section:"Progress update", title:"You are doing well", body:["This next section helps us answer the usual buyer questions at the viewing, rather than having to ring the office afterwards.","That tends to make viewings smoother and more efficient for everyone."], buttons:[{label:"Continue",style:"primary",action:"next"}] },
 
       { id:"electricity_supply", kind:"choice", section:"utilities", title:"Electricity supply", options:["Mains electricity","Other","Not sure"] },
       { id:"electricity_meter_location", kind:"choice", section:"utilities", title:"Where is the electricity meter?", options:["Hall","Under the stairs","Porch","Garage","External box","Other","Not sure"] },
@@ -504,694 +564,95 @@
       { id:"water_meter_location", kind:"choice", section:"utilities", title:"Where is the water meter?", options:["Hall","Under the stairs","Porch","Garage","External chamber outside","Other","Not sure"], showIf:d=>d.water_meter==="Yes" || d.water_meter==="Not sure" },
       { id:"water_meter_location_other", kind:"text", section:"utilities", title:"Please specify the water meter location", label:"Water meter location", placeholder:"Brief description", showIf:d=>d.water_meter_location==="Other" },
       { id:"water_stop_tap_location", kind:"text", section:"utilities", title:"Where is the internal stop tap, if known?", label:"Internal stop tap location", placeholder:"For example, under kitchen sink, utility room, downstairs WC, not sure" },
+
       { id:"utilities_issues", kind:"choice", section:"utilities", title:"Are you aware of any issues with water pressure, drainage performance or utility connections?", options:["No","Yes","Not sure"] },
       { id:"utilities_issues_details", kind:"textarea", section:"utilities", title:"Please add brief details", label:"Utility issue details", placeholder:"Brief details", showIf:d=>d.utilities_issues==="Yes" },
+
       { id:"broadband", kind:"choice", section:"utilities", title:"Broadband, if known", options:["Superfast / ultrafast available","Standard broadband only","Poor / limited","Not sure"] },
       { id:"mobile_signal", kind:"choice", section:"utilities", title:"Mobile signal, if known", options:["Generally good","Variable","Poor","Not sure"] },
+
       { id:"heating_type", kind:"choice", section:"utilities", title:"What type of heating does the property have?", options:["Gas boiler","Electric heating","Oil-fired heating","LPG","Solid fuel","Heat pump","Other","Not sure"] },
       { id:"heating_type_other", kind:"text", section:"utilities", title:"Please add the heating type", label:"Other heating arrangement", placeholder:"Brief details", showIf:d=>d.heating_type==="Other" },
-            { id:"boiler_type", kind:"choice", section:"viewing", title:"If there is a boiler, what type is it?", options:["Combi boiler","System boiler","Conventional boiler with hot water tank","No boiler","Not sure"], showIf:d=>["Gas boiler","Oil-fired heating","LPG"].includes(d.heating_type) || d.heating_type==="Not sure" },
-      { id:"boiler_location", kind:"choice", section:"viewing", title:"Where is the boiler?", options:["Kitchen","Utility room","Airing cupboard","Loft","Garage","Outbuilding","No boiler","Other","Not sure"], showIf:d=>["Gas boiler","Oil-fired heating","LPG"].includes(d.heating_type) || d.heating_type==="Not sure" },
-      { id:"boiler_age", kind:"choice", section:"viewing", title:"Approximate age of the boiler", options:["Under 5 years","5 to 10 years","More than 10 years","No boiler","Not sure"], showIf:d=>["Gas boiler","Oil-fired heating","LPG"].includes(d.heating_type) || d.heating_type==="Not sure" },
-      { id:"boiler_serviced", kind:"choice", section:"viewing", title:"Is the boiler serviced annually?", options:["Yes","No","No boiler","Not sure"], showIf:d=>["Gas boiler","Oil-fired heating","LPG"].includes(d.heating_type) || d.heating_type==="Not sure" },
-      { id:"hot_water_cylinder", kind:"choice", section:"viewing", title:"Is there a hot water cylinder or tank?", options:["Yes","No","Not sure"], showIf:d=>["System boiler","Conventional boiler with hot water tank","Not sure"].includes(d.boiler_type) },
+
+      { id:"boiler_type", kind:"choice", section:"viewing", title:"If there is a boiler, what type is it?", options:["Combi boiler","System boiler","Conventional boiler with hot water tank","No boiler","Not sure"] },
+
+      { id:"boiler_location", kind:"choice", section:"viewing", title:"Where is the boiler?", options:["Kitchen","Utility room","Airing cupboard","Loft","Garage","Outbuilding","No boiler","Other","Not sure"] },
+
+      { id:"boiler_age", kind:"choice", section:"viewing", title:"Approximate age of the boiler", options:["New (under 12 months)","1–3 years","3–5 years","5–10 years","10–15 years","15+ years","Not sure"] },
+
+      { id:"boiler_serviced", kind:"choice", section:"viewing", title:"Is the boiler serviced annually?", options:["Yes","No","Not sure"] },
+
+      { id:"hot_water_cylinder", kind:"choice", section:"viewing", title:"Is there a hot water cylinder or tank?", options:["Yes","No","Not sure"] },
+
       { id:"loft_present", kind:"choice", section:"viewing", title:"Is there a loft?", options:["Yes","No","Not sure"] },
       { id:"loft_boarded", kind:"choice", section:"viewing", title:"Is the loft boarded?", options:["Fully boarded","Partially boarded","Not boarded","Not sure"], showIf:d=>d.loft_present==="Yes" || d.loft_present==="Not sure" },
       { id:"loft_access", kind:"choice", section:"viewing", title:"What is the loft access?", options:["Fixed ladder","Pull-down ladder","Hatch only","Not sure"], showIf:d=>d.loft_present==="Yes" || d.loft_present==="Not sure" },
       { id:"loft_light", kind:"choice", section:"viewing", title:"Is there a fixed light in the loft?", options:["Yes","No","Not sure"], showIf:d=>d.loft_present==="Yes" || d.loft_present==="Not sure" },
+
       { id:"solar_panels", kind:"choice", section:"viewing", title:"Are there solar panels?", options:["Yes","No","Not sure"] },
       { id:"solar_panels_basis", kind:"choice", section:"viewing", title:"If there are solar panels, are they owned outright or subject to an agreement?", options:["Owned outright","Subject to a lease or other agreement","Not sure"], showIf:d=>d.solar_panels==="Yes" || d.solar_panels==="Not sure" },
+
       { id:"ev_charger", kind:"choice", section:"viewing", title:"Is there an EV charger?", options:["Yes","No","Not sure"] },
       { id:"alarm_cctv", kind:"choice", section:"viewing", title:"Is there an alarm or CCTV system?", options:["Alarm only","CCTV only","Both","No","Not sure"] },
       { id:"outbuildings", kind:"choice", section:"viewing", title:"Any outbuildings, garden room or home office?", options:["Yes","No","Not sure"] },
-
-      { id:"flood_history", kind:"choice", section:"risk", title:"Has the property ever flooded, to your knowledge?", options:["No","Yes","Not sure"] },
+            { id:"flood_history", kind:"choice", section:"risk", title:"Has the property ever flooded, to your knowledge?", options:["No","Yes","Not sure"] },
       { id:"flood_details", kind:"textarea", section:"risk", title:"Please add brief flood details", label:"Flood details", placeholder:"When, how serious, and whether works were carried out", showIf:d=>d.flood_history==="Yes" },
-      { id:"additional_location_risks", kind:"choice", section:"risk", title:"Are you aware of any other location or environmental risks affecting the property, such as coastal erosion, mining or ground stability issues, or radon?", options:["No","Yes","Not sure"] },
+
+      { id:"additional_location_risks", kind:"choice", section:"risk", title:"Are you aware of any other location or environmental risks affecting the property?", options:["No","Yes","Not sure"] },
       { id:"additional_location_risks_details", kind:"textarea", section:"risk", title:"Please add brief details", label:"Other location or environmental risk details", placeholder:"Brief details", showIf:d=>d.additional_location_risks==="Yes" },
+
       { id:"structural_issues", kind:"choice", section:"risk", title:"Any known structural movement, subsidence or structural issues?", options:["No","Yes","Not sure"] },
       { id:"structural_details", kind:"textarea", section:"risk", title:"Please add brief details", label:"Structural issue details", placeholder:"Brief details", showIf:d=>d.structural_issues==="Yes" },
+
       { id:"knotweed", kind:"choice", section:"risk", title:"Is there any known Japanese knotweed?", options:["No","Yes","Not sure"] },
-      { id:"insurance_issues", kind:"choice", section:"risk", title:"Have there been any insurance claims, difficulty obtaining insurance, or increased premiums due to property-related risks?", options:["No","Yes","Not sure"] },
+
+      { id:"insurance_issues", kind:"choice", section:"risk", title:"Have there been any insurance issues relating to the property?", options:["No","Yes","Not sure"] },
       { id:"insurance_issues_details", kind:"textarea", section:"risk", title:"Please add brief details", label:"Insurance issue details", placeholder:"Brief details", showIf:d=>d.insurance_issues==="Yes" },
+
       { id:"neighbour_issues", kind:"choice", section:"risk", title:"Any issues with neighbours that a buyer should know about?", options:["No","Yes","Prefer not to say","Not sure"] },
       { id:"neighbour_issue_details", kind:"textarea", section:"risk", title:"Please add brief details", label:"Neighbour issue details", placeholder:"Brief details", showIf:d=>d.neighbour_issues==="Yes" },
+
       { id:"disputes_complaints", kind:"choice", section:"risk", title:"Any ongoing or previous disputes or complaints affecting the property?", options:["No","Yes","Not sure"] },
-      { id:"disputes_details", kind:"textarea", section:"risk", title:"Please add brief details", label:"Dispute or complaint details", placeholder:"Brief details", showIf:d=>d.disputes_complaints==="Yes" },
+      { id:"disputes_details", kind:"textarea", section:"risk", title:"Please add brief details", label:"Dispute details", placeholder:"Brief details", showIf:d=>d.disputes_complaints==="Yes" },
+
       { id:"listed_or_conservation", kind:"choice", section:"risk", title:"Is the property listed or in a conservation area?", options:["Neither","Listed","Conservation area","Both","Not sure"] },
-      { id:"title_restrictions", kind:"choice", section:"risk", title:"Any known title restrictions, easements or covenants a buyer should know about?", options:["No","Yes","Not sure"] },
+
+      { id:"title_restrictions", kind:"choice", section:"risk", title:"Any known title restrictions, easements or covenants?", options:["No","Yes","Not sure"] },
       { id:"title_restrictions_details", kind:"textarea", section:"risk", title:"Please add brief details", label:"Title restriction details", placeholder:"Brief details", showIf:d=>d.title_restrictions==="Yes" },
-      { id:"covenant_restrictions", kind:"choice", section:"risk", title:"Do any known restrictions affect alterations, use of the property, parking of vehicles, or business use?", options:["No","Yes","Not sure"] },
+
+      { id:"covenant_restrictions", kind:"choice", section:"risk", title:"Do any known restrictions affect use or alterations?", options:["No","Yes","Not sure"] },
       { id:"covenant_restrictions_details", kind:"textarea", section:"risk", title:"Please add brief details", label:"Restriction details", placeholder:"Brief details", showIf:d=>d.covenant_restrictions==="Yes" },
-      { id:"rights_of_way", kind:"choice", section:"risk", title:"Any rights of way, shared access or shared driveway arrangements?", options:["No","Yes","Not sure"] },
-      { id:"rights_of_way_details", kind:"textarea", section:"risk", title:"Please add brief details", label:"Shared access / rights of way details", placeholder:"Brief details", showIf:d=>d.rights_of_way==="Yes" },
-      { id:"planning_works", kind:"choice", section:"risk", title:"Have there been any recent works, improvements or upgrades?", options:["No","Yes","Not sure"] },
-      { id:"planning_works_details", kind:"textarea", section:"risk", title:"Please detail the works and when they were undertaken", label:"Works, improvements or upgrades", placeholder:"For example: uPVC replacement windows August 2023, new boiler 2021, kitchen refit 2019", showIf:d=>d.planning_works==="Yes" },
-      { id:"planning_works_approval", kind:"choice", section:"risk", title:"Were those works carried out with the necessary planning permission and / or building regulations approval, if applicable?", options:["Yes","No","Not required","Not sure"], showIf:d=>d.planning_works==="Yes" },
-      { id:"planning_permission_docs", kind:"choice", section:"risk", title:"Do you have the relevant planning permission / building regulations paperwork, if applicable?", options:["Yes","No","Not applicable","Not sure"], showIf:d=>d.planning_works==="Yes" },
-      { id:"guarantees_docs", kind:"choice", section:"risk", title:"Do you have any guarantees, warranties or completion certificates for the works?", options:["Yes","No","Not applicable","Not sure"], showIf:d=>d.planning_works==="Yes" },
 
-      { id:"friendly_3", kind:"notice", section:"Progress update", title:"Almost there", body:["A few final details now help us present the property clearly and identify anything we should tidy up before marketing starts.","Thank you for sticking with it."], buttons:[{label:"Continue",style:"primary",action:"next"}] },
+      { id:"rights_of_way", kind:"choice", section:"risk", title:"Any rights of way or shared access arrangements?", options:["No","Yes","Not sure"] },
+      { id:"rights_of_way_details", kind:"textarea", section:"risk", title:"Please add brief details", label:"Rights of way details", placeholder:"Brief details", showIf:d=>d.rights_of_way==="Yes" },
 
-      { id:"lease_years_remaining", kind:"text", section:"leasehold", title:"How many years are left on the lease, if known?", label:"Years remaining on lease", placeholder:"For example, 112", showIf:d=>["Leasehold","Share of freehold"].includes(d.tenure) },
-      { id:"ground_rent", kind:"text", section:"leasehold", title:"Ground rent, if any", label:"Ground rent", placeholder:"For example, £250 per year or peppercorn", showIf:d=>["Leasehold","Share of freehold"].includes(d.tenure) },
-      { id:"service_charge", kind:"text", section:"leasehold", title:"Service charge, if any", label:"Service charge", placeholder:"For example, £1,200 per year", showIf:d=>["Leasehold","Share of freehold"].includes(d.tenure) },
-      { id:"managing_agent", kind:"text", section:"leasehold", title:"Managing agent or management company", label:"Managing agent / management company", placeholder:"Name, if known", showIf:d=>["Leasehold","Share of freehold"].includes(d.tenure) },
-      { id:"major_works", kind:"choice", section:"leasehold", title:"Are any major works planned or expected, if known?", options:["No","Yes","Not sure"], showIf:d=>["Leasehold","Share of freehold"].includes(d.tenure) },
-      { id:"lease_restrictions", kind:"textarea", section:"leasehold", title:"Any lease restrictions buyers should know about?", label:"Lease restrictions", placeholder:"Examples: pets, holiday lets, subletting, alterations, age restrictions", showIf:d=>["Leasehold","Share of freehold"].includes(d.tenure) },
+      { id:"planning_works", kind:"choice", section:"risk", title:"Have there been any recent works or improvements?", options:["No","Yes","Not sure"] },
+      { id:"planning_works_details", kind:"textarea", section:"risk", title:"Please detail the works", label:"Works details", placeholder:"Brief details", showIf:d=>d.planning_works==="Yes" },
+      { id:"planning_works_approval", kind:"choice", section:"risk", title:"Were approvals obtained where required?", options:["Yes","No","Not required","Not sure"], showIf:d=>d.planning_works==="Yes" },
+      { id:"planning_permission_docs", kind:"choice", section:"risk", title:"Do you have the paperwork?", options:["Yes","No","Not sure"], showIf:d=>d.planning_works==="Yes" },
+      { id:"guarantees_docs", kind:"choice", section:"risk", title:"Any guarantees or certificates?", options:["Yes","No","Not sure"], showIf:d=>d.planning_works==="Yes" },
 
-      { id:"epc_available", kind:"choice", section:"docs", title:"Do you have an EPC, or have you previously had one?", options:["Yes","No","Not sure"] },
-      { id:"solicitor_details", kind:"textarea", section:"docs", title:"Solicitor details, if known", label:"Solicitor details", placeholder:"Firm, contact name, phone or email, if already instructed" },
-      { id:"declaration_name", kind:"text", section:"docs", title:"Your name", label:"Please add your name", placeholder:"Your full name", required:true },
-      { id:"declaration_email", kind:"text", section:"docs", title:"Email address", label:"Please add your email address", placeholder:"Email address", required:true },
-      { id:"declaration_confirm", kind:"choice", section:"docs", title:"Please confirm the statement below", options:["I confirm this information is accurate to the best of my knowledge and I have not knowingly withheld anything that may affect a buyer’s decision","I am not able to confirm this"], required:true },
+      { id:"friendly_3", kind:"notice", section:"Progress update", title:"Almost there", body:["Just a few final points so we can complete the file properly.","These help us present the property clearly and avoid delays once a buyer is found."], buttons:[{label:"Continue",style:"primary",action:"next"}] },
+
+      { id:"lease_years_remaining", kind:"text", section:"leasehold", title:"Lease length remaining", label:"Years remaining", placeholder:"e.g. 112", showIf:d=>["Leasehold","Share of freehold"].includes(d.tenure) },
+      { id:"ground_rent", kind:"text", section:"leasehold", title:"Ground rent", label:"Ground rent", placeholder:"£ per year", showIf:d=>["Leasehold","Share of freehold"].includes(d.tenure) },
+      { id:"service_charge", kind:"text", section:"leasehold", title:"Service charge", label:"Service charge", placeholder:"£ per year", showIf:d=>["Leasehold","Share of freehold"].includes(d.tenure) },
+      { id:"managing_agent", kind:"text", section:"leasehold", title:"Managing agent", label:"Managing agent", placeholder:"Name if known", showIf:d=>["Leasehold","Share of freehold"].includes(d.tenure) },
+      { id:"major_works", kind:"choice", section:"leasehold", title:"Any major works expected?", options:["No","Yes","Not sure"], showIf:d=>["Leasehold","Share of freehold"].includes(d.tenure) },
+      { id:"lease_restrictions", kind:"textarea", section:"leasehold", title:"Lease restrictions", label:"Any restrictions buyers should know about", placeholder:"Brief details", showIf:d=>["Leasehold","Share of freehold"].includes(d.tenure) },
+
+      { id:"solicitor_details", kind:"textarea", section:"docs", title:"Solicitor details", label:"Solicitor details", placeholder:"Firm and contact if known" },
+
+      { id:"declaration_name", kind:"text", section:"docs", title:"Your name", label:"Full name", required:true },
+      { id:"declaration_email", kind:"text", section:"docs", title:"Email address", label:"Email", required:true },
+      { id:"declaration_mobile", kind:"text", section:"docs", title:"Mobile number", label:"Mobile", required:false },
+
+      { id:"declaration_confirm", kind:"choice", section:"docs", title:"Please confirm", options:[
+        "I confirm this information is accurate to the best of my knowledge",
+        "I am not able to confirm this"
+      ], required:true },
 
       { id:"summary", kind:"summary" },
       { id:"submitted", kind:"submitted" }
     ];
-
-    function loadState(){
-      try{
-        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-      }catch(e){
-        return {};
-      }
-    }
-
-    function saveState(){
-      data.__screenId = screenId;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    }
-
-    function clearState(preserveScreen=false){
-      const newScreen = preserveScreen ? screenId : "welcome";
-      localStorage.removeItem(STORAGE_KEY);
-      for(const key of Object.keys(data)){ delete data[key]; }
-      screenId = newScreen;
-      saveState();
-      render();
-    }
-
-    function visibleScreens(){
-      return screens.filter(s => !s.showIf || s.showIf(data));
-    }
-
-    function currentVisibleScreens(){
-      return visibleScreens().filter(s => !["welcome","submitted"].includes(s.id));
-    }
-
-    function currentIndexInVisible(){
-      return currentVisibleScreens().findIndex(s => s.id === screenId);
-    }
-
-    function goNext(){
-      const current = screens.find(s => s.id === screenId);
-
-      if(current && (current.kind === "text" || current.kind === "textarea") && current.required){
-        if(!String(data[current.id] || "").trim()){
-          alert("Please complete this field before continuing.");
-          return;
-        }
-      }
-
-      const vis = visibleScreens();
-      const idx = vis.findIndex(s => s.id === screenId);
-      if(idx >= 0 && idx < vis.length - 1){
-        screenId = vis[idx + 1].id;
-      }
-      saveState();
-      render();
-    }
-
-    function goPrev(){
-      const vis = visibleScreens();
-      const idx = vis.findIndex(s => s.id === screenId);
-      if(idx > 0){
-        screenId = vis[idx - 1].id;
-      }
-      saveState();
-      render();
-    }
-
-    function setValue(id, value){
-      data[id] = value;
-      saveState();
-    }
-
-    function handleTextInput(id, el){
-      if(id === "legal_owner_names"){
-        const lines = el.value.split("\n").map(line =>
-          line.replace(/\b[a-z]/g, c => c.toUpperCase())
-        );
-        el.value = lines.join("\n");
-        data[id] = el.value;
-      } else {
-        data[id] = el.value;
-      }
-
-      saveState();
-    }
-
-    function startNew(){
-      clearState(true);
-      screenId = "consent";
-      saveState();
-      render();
-    }
-
-    function resumeForm(){
-      const stored = loadState();
-      if(Object.keys(stored).length){
-        Object.assign(data, stored);
-        screenId = stored.__screenId && stored.__screenId !== "submitted" ? stored.__screenId : "consent";
-      } else {
-        screenId = "consent";
-      }
-      saveState();
-      render();
-    }
-
-    function ensureCurrentVisible(){
-      const vis = visibleScreens();
-      if(!vis.some(s => s.id === screenId)){
-        const idx = screens.findIndex(s => s.id === screenId);
-        let fallback = "summary";
-        for(let i = idx - 1; i >= 0; i--){
-          const candidate = screens[i];
-          if(!candidate.showIf || candidate.showIf(data)){
-            fallback = candidate.id;
-            break;
-          }
-        }
-        screenId = fallback;
-        saveState();
-      }
-    }
-
-    function escapeHtml(str){
-      return String(str || "")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
-
-    function valueForDisplay(id){
-      const v = data[id];
-      if(v === undefined || v === null || v === "") return "—";
-      return String(v).replace(/\n/g, "<br>");
-    }
-
-    function nextButtonDisabled(screen){
-      return false;
-    }
-        function renderNotice(screen){
-      const buttons = (screen.buttons || []).map(b => `
-        <button class="btn ${b.style || 'ghost'}" onclick="handleAction('${b.action}')">${escapeHtml(b.label)}</button>
-      `).join("");
-      return `
-        <div class="eyebrow">${escapeHtml(screen.section || "Information")}</div>
-        <h2>${escapeHtml(screen.title)}</h2>
-        ${screen.body.map(p => `<p>${escapeHtml(p)}</p>`).join("")}
-        ${screen.footerHtml ? `<p class="tiny">${screen.footerHtml}</p>` : ""}
-        <div class="btn-grid">${buttons}</div>
-      `;
-    }
-
-    function renderChoice(screen){
-      return `
-        <div class="eyebrow">${escapeHtml(sectionTitles[screen.section] || screen.section)}</div>
-        <h2>${escapeHtml(screen.title)}</h2>
-        <div class="btn-grid">
-          ${screen.options.map(opt => `
-            <button class="btn" onclick="chooseOption('${screen.id}', '${escapeJs(opt)}')">${escapeHtml(opt)}</button>
-          `).join("")}
-        </div>
-        <div class="nav">
-          <button class="btn ghost" onclick="goPrev()">Back</button>
-        </div>
-      `;
-    }
-
-    function renderText(screen){
-      const val = data[screen.id] || "";
-      const isTextArea = screen.kind === "textarea";
-      return `
-        <div class="eyebrow">${escapeHtml(sectionTitles[screen.section] || screen.section)}</div>
-        <h2>${escapeHtml(screen.title)}</h2>
-        <div class="field">
-          <label for="${escapeHtml(screen.id)}">${escapeHtml(screen.label || screen.title)}</label>
-          ${isTextArea
-            ? `<textarea id="${escapeHtml(screen.id)}"
-                placeholder="${escapeHtml(screen.placeholder || '')}"
-                ${screen.id === "legal_owner_names" ? 'style="text-transform:capitalize"' : ""}
-                oninput="handleTextInput('${screen.id}', this)">${escapeHtml(val)}</textarea>`
-            : `<input id="${escapeHtml(screen.id)}"
-                type="text"
-                placeholder="${escapeHtml(screen.placeholder || '')}"
-                value="${escapeHtml(val)}"
-                ${screen.id === "legal_owner_names" ? 'style="text-transform:capitalize"' : ""}
-                oninput="handleTextInput('${screen.id}', this)" />`
-          }
-        </div>
-        ${screen.required ? `<p class="tiny">This answer is required.</p>` : `<p class="tiny">Leave blank if not known.</p>`}
-        <div class="nav">
-          <button class="btn ghost" onclick="goPrev()">Back</button>
-          <button class="btn primary" onclick="goNext()" ${nextButtonDisabled(screen) ? "disabled" : ""}>Next</button>
-        </div>
-      `;
-    }
-
-    function groupSectionRows(fieldIds){
-      const rows = fieldIds
-        .filter(id => {
-          const s = screens.find(x => x.id === id);
-          if(!s) return false;
-          if(s.showIf && !s.showIf(data)) return false;
-          const val = data[id];
-          return val !== undefined && val !== null && String(val).trim() !== "";
-        })
-        .map(id => `
-          <div class="kv-row">
-            <div class="kv-key">${escapeHtml(fieldLabels[id] || id)}</div>
-            <div class="kv-val">${valueForDisplay(id)}</div>
-          </div>
-        `).join("");
-      return rows || `<div class="kv-row"><div class="kv-key">No information added</div><div class="kv-val">—</div></div>`;
-    }
-
-    function screenIdForSection(sectionKey){
-      return screens.find(s => s.section === sectionKey && s.kind !== "notice")?.id || "consent";
-    }
-
-    function editSection(sectionKey){
-      screenId = screenIdForSection(sectionKey);
-      saveState();
-      render();
-    }
-
-    function generateFlags(){
-      const flags = [];
-      if((data.acting_role === "For an estate" || data.acting_role === "For a relative" || data.is_legal_owner_respondent === "No") &&
-         (!data.authority_type || data.authority_type === "Authority not yet in place" || data.authority_document_available === "No" || data.authority_document_available === "Not sure")){
-        flags.push("Authority to act should be checked before the file progresses.");
-      }
-      if(["Leasehold","Share of freehold"].includes(data.tenure) &&
-         (!data.lease_years_remaining || !data.service_charge || !data.ground_rent)){
-        flags.push("Leasehold information appears incomplete and should be checked with the client or solicitor.");
-      }
-      if(data.parking && ["Driveway","Garage","Allocated space","Permit","Other"].includes(data.parking) &&
-         (!data.parking_basis || data.parking_basis === "Not sure")){
-        flags.push("Parking exists but the legal basis should be checked.");
-      }
-      if(data.access_type === "Via a shared or private road"){
-        flags.push("Access is via a shared or private road. Check rights and maintenance responsibility.");
-      }
-      if(data.utilities_issues === "Yes"){
-        flags.push("Utility issue disclosed. Review before marketing wording is finalised.");
-      }
-      if(data.planning_works === "Yes" && ["No","Not sure"].includes(data.planning_works_approval || "")){
-        flags.push("Recent works reported but approval status is unclear or negative. Review before marketing.");
-      }
-      if(data.planning_works === "Yes" && ["No","Not sure"].includes(data.planning_permission_docs || "")){
-        flags.push("Recent works reported but planning / building regulations paperwork may need checking.");
-      }
-      if(data.planning_works === "Yes" && ["No","Not sure"].includes(data.guarantees_docs || "")){
-        flags.push("Recent works reported but guarantees, certificates or warranties may need checking.");
-      }
-      if(data.insurance_issues === "Yes"){
-        flags.push("Insurance issue disclosed. Clarify nature and current position.");
-      }
-      if(data.neighbour_issues === "Yes" || data.disputes_complaints === "Yes"){
-        flags.push("Neighbour issue or dispute disclosed. Review before marketing wording is finalised.");
-      }
-      if(data.title_restrictions === "Yes" || data.rights_of_way === "Yes" || data.covenant_restrictions === "Yes"){
-        flags.push("Title, access or covenant issue disclosed. Check title and solicitor input.");
-      }
-      if(data.flood_history === "Yes" || data.additional_location_risks === "Yes"){
-        flags.push("Environmental or location risk disclosed. Clarify extent and any supporting information.");
-      }
-      if(data.structural_issues === "Yes"){
-        flags.push("Structural issue disclosed. Check details and supporting paperwork if available.");
-      }
-      if(data.vacant_or_occupied === "Tenanted" || data.vacant_or_occupied === "Part vacant / mixed use"){
-        flags.push("Tenancy position should be reviewed before marketing to confirm sale strategy.");
-      }
-      if(data.onward_position === "Will need to find somewhere" || data.onward_position === "Already looking"){
-        flags.push("Seller has an onward dependency. Sales progression and marketing messaging may need care.");
-      }
-      if(data.knotweed === "Yes" || data.knotweed === "Not sure"){
-        flags.push("Japanese knotweed response should be checked.");
-      }
-      if(data.listed_or_conservation === "Listed" || data.listed_or_conservation === "Both" || data.listed_or_conservation === "Conservation area"){
-        flags.push("Listed or conservation area status may affect marketing wording and works history.");
-      }
-      if(data.solar_panels === "Yes" && (!data.solar_panels_basis || data.solar_panels_basis === "Not sure")){
-        flags.push("Solar panels disclosed. Ownership or agreement basis should be confirmed.");
-      }
-      if(data.declaration_confirm === "I am not able to confirm this"){
-        flags.push("Seller has not confirmed the declaration. Manual review required before marketing.");
-      }
-      return flags;
-    }
-
-    function renderSummary(){
-      const flags = generateFlags();
-      return `
-        <div class="eyebrow">Final review</div>
-        <h2>Review your answers</h2>
-        <p>Please check the sections below. If anything needs changing, tap the relevant edit button before you submit.</p>
-
-        <div class="section-card">
-          <div class="split">
-            <h3>Property details</h3>
-            <button class="btn ghost" style="width:auto" onclick="editSection('property')">Edit</button>
-          </div>
-          <div class="kv">${groupSectionRows(["address_line_1","address_line_2","town_city","postcode","property_type","property_type_other","tenure"])}</div>
-        </div>
-
-        <div class="section-card">
-          <div class="split">
-            <h3>Ownership and authority</h3>
-            <button class="btn ghost" style="width:auto" onclick="editSection('ownership')">Edit</button>
-          </div>
-          <div class="kv">${groupSectionRows(["acting_role","acting_role_other","number_of_owners","legal_owner_names","is_legal_owner_respondent","authority_type","authority_type_other","authority_document_available"])}</div>
-        </div>
-
-        <div class="section-card">
-          <div class="split">
-            <h3>Occupancy and sale position</h3>
-            <button class="btn ghost" style="width:auto" onclick="editSection('occupancy')">Edit</button>
-          </div>
-          <div class="kv">${groupSectionRows(["vacant_or_occupied","tenant_details","onward_position","vacant_reason","vacant_reason_other"])}</div>
-        </div>
-
-        <div class="section-card">
-          <div class="split">
-            <h3>Material information</h3>
-            <button class="btn ghost" style="width:auto" onclick="editSection('material')">Edit</button>
-          </div>
-          <div class="kv">${groupSectionRows(["council_tax_band","local_authority","parking","parking_other","parking_basis","access_type","garden_orientation"])}</div>
-        </div>
-
-        <div class="section-card">
-          <div class="split">
-            <h3>Services and utilities</h3>
-            <button class="btn ghost" style="width:auto" onclick="editSection('utilities')">Edit</button>
-          </div>
-          <div class="kv">${groupSectionRows(["electricity_supply","electricity_meter_location","electricity_meter_location_other","gas_supply","gas_meter_location","gas_meter_location_other","water_supply","drainage","water_meter","water_meter_location","water_meter_location_other","water_stop_tap_location","utilities_issues","utilities_issues_details","broadband","mobile_signal","heating_type","heating_type_other"])}</div>
-        </div>
-
-        <div class="section-card">
-          <div class="split">
-            <h3>Viewing information</h3>
-            <button class="btn ghost" style="width:auto" onclick="editSection('viewing')">Edit</button>
-          </div>
-          <div class="kv">${groupSectionRows(["boiler_type","boiler_location","boiler_age","boiler_serviced","hot_water_cylinder","loft_present","loft_boarded","loft_access","loft_light","solar_panels","solar_panels_basis","ev_charger","alarm_cctv","outbuildings"])}</div>
-        </div>
-
-        <div class="section-card">
-          <div class="split">
-            <h3>Risks, restrictions and works</h3>
-            <button class="btn ghost" style="width:auto" onclick="editSection('risk')">Edit</button>
-          </div>
-          <div class="kv">${groupSectionRows(["flood_history","flood_details","additional_location_risks","additional_location_risks_details","structural_issues","structural_details","knotweed","insurance_issues","insurance_issues_details","neighbour_issues","neighbour_issue_details","disputes_complaints","disputes_details","listed_or_conservation","title_restrictions","title_restrictions_details","covenant_restrictions","covenant_restrictions_details","rights_of_way","rights_of_way_details","planning_works","planning_works_details","planning_works_approval","planning_permission_docs","guarantees_docs"])}</div>
-        </div>
-
-        ${["Leasehold","Share of freehold"].includes(data.tenure) ? `
-          <div class="section-card">
-            <div class="split">
-              <h3>Leasehold information</h3>
-              <button class="btn ghost" style="width:auto" onclick="editSection('leasehold')">Edit</button>
-            </div>
-            <div class="kv">${groupSectionRows(["lease_years_remaining","ground_rent","service_charge","managing_agent","major_works","lease_restrictions"])}</div>
-          </div>
-        ` : ""}
-
-        <div class="section-card">
-          <div class="split">
-            <h3>Documents and contacts</h3>
-            <button class="btn ghost" style="width:auto" onclick="editSection('docs')">Edit</button>
-          </div>
-          <div class="kv">${groupSectionRows(["epc_available","solicitor_details","declaration_name","declaration_email","declaration_confirm"])}</div>
-        </div>
-
-        ${flags.length ? `
-          <div class="notice">
-            <h3>Internal follow-up points</h3>
-            <ul>${flags.map(f => `<li>${escapeHtml(f)}</li>`).join("")}</ul>
-          </div>
-        ` : `
-          <div class="notice">
-            <h3>Internal follow-up points</h3>
-            <p>No automatic follow-up flags were triggered from the answers given.</p>
-          </div>
-        `}
-
-        <div class="summary-action">
-          <button class="btn ghost" onclick="goPrev()">Back</button>
-          <button class="btn primary" onclick="submitForm()">Submit form</button>
-        </div>
-        <p class="tiny">Submitting will open your email app with a pre-filled report to ${escapeHtml(SUBMISSION_EMAIL)}. Once sent, the saved answers on this device will be cleared.</p>
-      `;
-    }
-        function buildReport(){
-      const flags = generateFlags();
-      const lines = [];
-      const join = (...parts) => parts.filter(Boolean).join(", ");
-
-      lines.push("PROPERTY INFORMATION FORM");
-      lines.push("");
-      lines.push("PROPERTY");
-      lines.push(`Address: ${join(data.address_line_1, data.address_line_2, data.town_city, data.postcode) || "—"}`);
-      lines.push(`Property type: ${data.property_type || "—"}${data.property_type_other ? " - " + data.property_type_other : ""}`);
-      lines.push(`Tenure: ${data.tenure || "—"}`);
-      lines.push("");
-
-      lines.push("OWNERSHIP AND AUTHORITY");
-      lines.push(`Acting for: ${data.acting_role || "—"}${data.acting_role_other ? " - " + data.acting_role_other : ""}`);
-      lines.push(`Number of legal owners: ${data.number_of_owners || "—"}`);
-      lines.push(`Legal owner names: ${cleanOneLine(data.legal_owner_names) || "—"}`);
-      lines.push(`Respondent one of legal owners: ${data.is_legal_owner_respondent || "—"}`);
-      if(data.authority_type) lines.push(`Authority: ${data.authority_type}${data.authority_type_other ? " - " + data.authority_type_other : ""}`);
-      if(data.authority_document_available) lines.push(`Authority document available: ${data.authority_document_available}`);
-      lines.push("");
-
-      lines.push("OCCUPANCY AND SALE POSITION");
-      lines.push(`Occupancy: ${data.vacant_or_occupied || "—"}`);
-      if(data.tenant_details) lines.push(`Tenancy details: ${cleanOneLine(data.tenant_details)}`);
-      if(data.onward_position) lines.push(`Onward position: ${data.onward_position}`);
-      if(data.vacant_reason) lines.push(`Reason vacant: ${data.vacant_reason}${data.vacant_reason_other ? " - " + data.vacant_reason_other : ""}`);
-      lines.push("");
-
-      lines.push("MATERIAL INFORMATION");
-      lines.push(`Council Tax band: ${data.council_tax_band || "—"}`);
-      lines.push(`Local authority: ${data.local_authority || "—"}`);
-      lines.push(`Parking: ${data.parking || "—"}${data.parking_other ? " - " + data.parking_other : ""}`);
-      if(data.parking_basis) lines.push(`Parking basis: ${data.parking_basis}`);
-      if(data.access_type) lines.push(`Access to property: ${data.access_type}`);
-      lines.push(`Rear garden orientation: ${data.garden_orientation || "—"}`);
-      lines.push("");
-
-      lines.push("SERVICES AND UTILITIES");
-      lines.push(`Electricity: ${data.electricity_supply || "—"}`);
-      lines.push(`Electricity meter location: ${data.electricity_meter_location === "Other" ? (data.electricity_meter_location_other || "Other") : (data.electricity_meter_location || "—")}`);
-      lines.push(`Gas: ${data.gas_supply || "—"}`);
-      if(data.gas_supply === "Mains gas" || data.gas_supply === "Not sure") lines.push(`Gas meter location: ${data.gas_meter_location === "Other" ? (data.gas_meter_location_other || "Other") : (data.gas_meter_location || "—")}`);
-      lines.push(`Water supply: ${data.water_supply || "—"}`);
-      lines.push(`Drainage: ${data.drainage || "—"}`);
-      lines.push(`Water meter: ${data.water_meter || "—"}`);
-      if(data.water_meter === "Yes" || data.water_meter === "Not sure") lines.push(`Water meter location: ${data.water_meter_location === "Other" ? (data.water_meter_location_other || "Other") : (data.water_meter_location || "—")}`);
-      lines.push(`Internal stop tap location: ${data.water_stop_tap_location || "—"}`);
-      if(data.utilities_issues) lines.push(`Utility issues: ${data.utilities_issues}`);
-      if(data.utilities_issues_details) lines.push(`Utility issue details: ${cleanOneLine(data.utilities_issues_details)}`);
-      lines.push(`Broadband: ${data.broadband || "—"}`);
-      lines.push(`Mobile signal: ${data.mobile_signal || "—"}`);
-      lines.push(`Heating type: ${data.heating_type || "—"}${data.heating_type_other ? " - " + data.heating_type_other : ""}`);
-      lines.push("");
-
-      lines.push("VIEWING NOTES");
-      if(data.boiler_type) lines.push(`Boiler type: ${data.boiler_type}`);
-      if(data.boiler_location) lines.push(`Boiler location: ${data.boiler_location}`);
-      if(data.boiler_age) lines.push(`Boiler age: ${data.boiler_age}`);
-      if(data.boiler_serviced) lines.push(`Boiler serviced annually: ${data.boiler_serviced}`);
-      if(data.hot_water_cylinder) lines.push(`Hot water cylinder: ${data.hot_water_cylinder}`);
-      lines.push(`Loft present: ${data.loft_present || "—"}`);
-      if(data.loft_boarded) lines.push(`Loft boarded: ${data.loft_boarded}`);
-      if(data.loft_access) lines.push(`Loft access: ${data.loft_access}`);
-      if(data.loft_light) lines.push(`Loft light: ${data.loft_light}`);
-      lines.push(`Solar panels: ${data.solar_panels || "—"}`);
-      if(data.solar_panels_basis) lines.push(`Solar panels ownership / agreement: ${data.solar_panels_basis}`);
-      lines.push(`EV charger: ${data.ev_charger || "—"}`);
-      lines.push(`Alarm / CCTV: ${data.alarm_cctv || "—"}`);
-      lines.push(`Outbuildings / garden room: ${data.outbuildings || "—"}`);
-      lines.push("");
-
-      lines.push("RISKS, RESTRICTIONS AND WORKS");
-      lines.push(`Flooding history: ${data.flood_history || "—"}`);
-      if(data.flood_details) lines.push(`Flood details: ${cleanOneLine(data.flood_details)}`);
-      if(data.additional_location_risks) lines.push(`Other location or environmental risks: ${data.additional_location_risks}`);
-      if(data.additional_location_risks_details) lines.push(`Other location or environmental risk details: ${cleanOneLine(data.additional_location_risks_details)}`);
-      lines.push(`Structural issues: ${data.structural_issues || "—"}`);
-      if(data.structural_details) lines.push(`Structural details: ${cleanOneLine(data.structural_details)}`);
-      lines.push(`Japanese knotweed: ${data.knotweed || "—"}`);
-      if(data.insurance_issues) lines.push(`Insurance issues: ${data.insurance_issues}`);
-      if(data.insurance_issues_details) lines.push(`Insurance issue details: ${cleanOneLine(data.insurance_issues_details)}`);
-      lines.push(`Neighbour issues: ${data.neighbour_issues || "—"}`);
-      if(data.neighbour_issue_details) lines.push(`Neighbour details: ${cleanOneLine(data.neighbour_issue_details)}`);
-      lines.push(`Disputes / complaints: ${data.disputes_complaints || "—"}`);
-      if(data.disputes_details) lines.push(`Dispute details: ${cleanOneLine(data.disputes_details)}`);
-      lines.push(`Listed / conservation area: ${data.listed_or_conservation || "—"}`);
-      lines.push(`Title restrictions / easements: ${data.title_restrictions || "—"}`);
-      if(data.title_restrictions_details) lines.push(`Title details: ${cleanOneLine(data.title_restrictions_details)}`);
-      if(data.covenant_restrictions) lines.push(`Restrictions affecting use or alterations: ${data.covenant_restrictions}`);
-      if(data.covenant_restrictions_details) lines.push(`Restriction details: ${cleanOneLine(data.covenant_restrictions_details)}`);
-      lines.push(`Rights of way / shared access: ${data.rights_of_way || "—"}`);
-      if(data.rights_of_way_details) lines.push(`Rights of way details: ${cleanOneLine(data.rights_of_way_details)}`);
-      lines.push(`Recent works / improvements / upgrades: ${data.planning_works || "—"}`);
-      if(data.planning_works_details) lines.push(`Works details: ${cleanOneLine(data.planning_works_details)}`);
-      if(data.planning_works_approval) lines.push(`Works approval status: ${data.planning_works_approval}`);
-      if(data.planning_permission_docs) lines.push(`Planning / building regs paperwork: ${data.planning_permission_docs}`);
-      if(data.guarantees_docs) lines.push(`Guarantees / certificates: ${data.guarantees_docs}`);
-      lines.push("");
-
-      if(["Leasehold","Share of freehold"].includes(data.tenure)){
-        lines.push("LEASEHOLD INFORMATION");
-        lines.push(`Lease years remaining: ${data.lease_years_remaining || "—"}`);
-        lines.push(`Ground rent: ${data.ground_rent || "—"}`);
-        lines.push(`Service charge: ${data.service_charge || "—"}`);
-        lines.push(`Managing agent / management company: ${data.managing_agent || "—"}`);
-        lines.push(`Major works expected: ${data.major_works || "—"}`);
-        lines.push(`Lease restrictions: ${cleanOneLine(data.lease_restrictions) || "—"}`);
-        lines.push("");
-      }
-
-      lines.push("DOCUMENTS AND CONTACTS");
-      lines.push(`EPC available: ${data.epc_available || "—"}`);
-      lines.push(`Solicitor details: ${cleanOneLine(data.solicitor_details) || "—"}`);
-      lines.push(`Submitted by: ${data.declaration_name || "—"}`);
-      lines.push(`Email: ${data.declaration_email || "—"}`);
-      lines.push(`Declaration confirmation: ${data.declaration_confirm || "—"}`);
-      lines.push("");
-
-      lines.push("FLAGS FOR FOLLOW-UP");
-      if(flags.length){
-        flags.forEach(flag => lines.push(`- ${flag}`));
-      } else {
-        lines.push("- No automatic follow-up flags were triggered from the answers given.");
-      }
-      lines.push("");
-      lines.push("Thank you for your patience.");
-      lines.push("Steph, Simon and the team");
-
-      return lines.join("\n");
-    }
-
-    function cleanOneLine(v){
-      return String(v || "").replace(/\s*\n\s*/g, " | ").trim();
-    }
-
-    function submitForm(){
-      if(!String(data.declaration_name || "").trim() || !String(data.declaration_email || "").trim()){
-        alert("Please add your name and email address before submitting.");
-        editSection("docs");
-        return;
-      }
-      if(data.declaration_confirm === "I am not able to confirm this"){
-        const proceed = confirm("You have indicated that you are not able to confirm the declaration. Do you still want to continue and send the form for manual review?");
-        if(!proceed) return;
-      }
-      const subject = `Property Information Form - ${cleanOneLine([data.address_line_1, data.postcode].filter(Boolean).join(", ")) || "Submission"}`;
-      const body = buildReport();
-      const mailto = `mailto:${encodeURIComponent(SUBMISSION_EMAIL)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-      window.location.href = mailto;
-      localStorage.removeItem(STORAGE_KEY);
-      screenId = "submitted";
-      render();
-    }
-
-    function handleAction(action){
-      if(action === "startNew") startNew();
-      if(action === "resume") resumeForm();
-      if(action === "clear"){
-        const ok = confirm("Clear the saved answers on this device and return to the start?");
-        if(ok) clearState();
-      }
-      if(action === "next") goNext();
-    }
-
-    function chooseOption(id, value){
-      setValue(id, value);
-      goNext();
-    }
-
-    function escapeJs(str){
-      return String(str).replaceAll("\\","\\\\").replaceAll("'","\\'");
-    }
-
-    function renderSubmitted(){
-      return `
-        <div class="thankyou">
-          <div class="eyebrow">Thank you</div>
-          <h2>Thank you for completing the form</h2>
-          <p>We hope that was reasonably straightforward. Getting this information in place early helps us prepare the file properly and answer buyer questions more efficiently once marketing begins.</p>
-          <img class="sig" src="Steph & Simon Sig.jpeg" alt="Steph and Simon signature" />
-          <p><strong>Thank you for your patience,<br>from Steph, Simon and the team.</strong></p>
-          <div class="btn-grid">
-            <button class="btn primary" onclick="startNew()">Start another form</button>
-          </div>
-        </div>
-      `;
-    }
-
-    function render(){
-      ensureCurrentVisible();
-      const app = document.getElementById("app");
-      const label = document.getElementById("stepLabel");
-      const bar = document.getElementById("progressBar");
-      const brandHeader = document.getElementById("brandHeader");
-      const screen = screens.find(s => s.id === screenId) || screens[0];
-
-      if (["welcome", "consent"].includes(screenId)) {
-        brandHeader.classList.remove("compact");
-      } else {
-        brandHeader.classList.add("compact");
-      }
-
-      if(screen.kind === "submitted"){
-        label.textContent = "Complete";
-        bar.style.width = "100%";
-        app.innerHTML = renderSubmitted();
-        return;
-      }
-
-      const vis = currentVisibleScreens();
-      const idx = currentIndexInVisible();
-      const pct = idx >= 0 ? Math.round(((idx + 1) / vis.length) * 100) : 0;
-      label.textContent = screen.kind === "summary" ? "Final review" : `Step ${Math.max(idx + 1, 0)} of ${vis.length}`;
-      bar.style.width = `${pct}%`;
-
-      if(screen.kind === "notice"){
-        app.innerHTML = renderNotice(screen);
-        return;
-      }
-      if(screen.kind === "choice"){
-        app.innerHTML = renderChoice(screen);
-        return;
-      }
-      if(screen.kind === "text" || screen.kind === "textarea"){
-        app.innerHTML = renderText(screen);
-        return;
-      }
-      if(screen.kind === "summary"){
-        app.innerHTML = renderSummary();
-        return;
-      }
-    }
-
-    saveState();
-    render();
-  </script>
-</body>
-</html>
+    
