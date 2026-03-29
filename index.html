@@ -356,11 +356,15 @@
 
     function applyQueryPrefill(){
       const prefill = getQueryPrefill();
-      Object.keys(prefill).forEach(key => {
-        if (prefill[key] && !data[key]) {
-          data[key] = prefill[key];
-        }
-      });
+    
+      data.address_house_number = prefill.address_house_number || "";
+      data.address_street = prefill.address_street || "";
+      data.address_area = prefill.address_area || "";
+      data.town_city = prefill.town_city || "";
+      data.postcode = prefill.postcode || "";
+      data.declaration_name = prefill.declaration_name || "";
+      data.declaration_email = prefill.declaration_email || "";
+      data.declaration_mobile = prefill.declaration_mobile || "";
     }
 
     function hasPrefillParams(){
