@@ -471,8 +471,10 @@
       covenant_restrictions_details: "Restriction details",
       rights_of_way: "Rights of way / shared access",
       rights_of_way_details: "Rights of way details",
-      planning_works: "Recent works / improvements / upgrades",
-      planning_works_details: "Works details",
+      planning_works: "Major works / alterations",
+      recent_upgrades: "Repairs / replacements / upgrades",
+      recent_upgrades_details: "Repairs / upgrades details",
+      planning_works_details: "Major works details",
       planning_works_approval: "Works approval status",
       planning_permission_docs: "Planning / building regs paperwork",
       guarantees_docs: "Guarantees / certificates",
@@ -662,12 +664,66 @@
       { id:"rights_of_way", kind:"choice", section:"risk", title:"Any rights of way or shared access arrangements?", options:["No","Yes","Not sure"] },
       { id:"rights_of_way_details", kind:"textarea", section:"risk", title:"Please add brief details", label:"Rights of way details", placeholder:"Brief details", showIf:d=>d.rights_of_way==="Yes" },
 
-      { id:"planning_works", kind:"choice", section:"risk", title:"Have there been any recent works or improvements?", options:["No","Yes","Not sure"] },
-      { id:"planning_works_details", kind:"textarea", section:"risk", title:"Please detail the works", label:"Works details", placeholder:"Brief details", showIf:d=>d.planning_works==="Yes" },
-      { id:"planning_works_approval", kind:"choice", section:"risk", title:"Were approvals obtained where required?", options:["Yes","No","Not required","Not sure"], showIf:d=>d.planning_works==="Yes" },
-      { id:"planning_permission_docs", kind:"choice", section:"risk", title:"Do you have the paperwork?", options:["Yes","No","Not sure"], showIf:d=>d.planning_works==="Yes" },
+      // --- MAJOR WORKS ---
+      { 
+        id:"planning_works",
+        kind:"choice",
+        section:"risk",
+        title:"Have you carried out any major works, alterations or upgrades?",
+        options:["No","Yes","Not sure"]
+      },
+      {
+        id:"planning_works_details",
+        kind:"textarea",
+        section:"risk",
+        title:"Please list the works and approximate dates",
+        label:"Works and dates",
+        placeholder:"For example:\n• Rear extension (2018)\n• New windows throughout (2021)\n• Loft conversion (2016)\n• Kitchen replacement (2020)",
+        showIf:d=>d.planning_works==="Yes"
+      },
+      {
+        id:"planning_works_approval",
+        kind:"choice",
+        section:"risk",
+        title:"Were approvals obtained where required?",
+        options:["Yes","No","Not required","Not sure"],
+        showIf:d=>d.planning_works==="Yes"
+      },
+      
+      // --- REINFORCEMENT SCREEN ---
+      {
+        id:"friendly_improvements",
+        kind:"notice",
+        section:"risk",
+        title:"A bit more detail helps here",
+        body:[
+          "Buyers almost always ask about improvements and upgrades, even smaller ones.",
+          "The next screen covers more routine works that still help us present the property properly and answer questions at viewings."
+        ],
+        buttons:[{label:"Continue",style:"primary",action:"next"}]
+      },
+      
+      // --- SECONDARY WORKS ---
+      {
+        id:"recent_upgrades",
+        kind:"choice",
+        section:"risk",
+        title:"Have you carried out any other repairs, replacements or upgrades?",
+        options:["No","Yes","Not sure"]
+      },
+      {
+        id:"recent_upgrades_details",
+        kind:"textarea",
+        section:"risk",
+        title:"Please add any other works and approximate dates",
+        label:"Repairs and upgrades",
+        placeholder:"For example:\n• New boiler (2022)\n• Roof repairs (2021)\n• Rewire or consumer unit (2020)\n• New bathroom (2019)\n• Insulation upgrades\n• Flooring replaced",
+        showIf:d=>d.recent_upgrades==="Yes"
+      },
+      
+      // --- DOCUMENTS ---
+      { id:"planning_permission_docs", kind:"choice", section:"risk", title:"Do you have any relevant paperwork for the works?", options:["Yes","No","Not sure"], showIf:d=>d.planning_works==="Yes" },
       { id:"guarantees_docs", kind:"choice", section:"risk", title:"Any guarantees or certificates?", options:["Yes","No","Not sure"], showIf:d=>d.planning_works==="Yes" },
-
       { id:"friendly_3", kind:"notice", section:"Progress update", title:"Almost there", body:["Just a few final points so we can complete the file properly.","These help us present the property clearly and avoid delays once a buyer is found."], buttons:[{label:"Continue",style:"primary",action:"next"}] },
 
       { id:"lease_years_remaining", kind:"text", section:"leasehold", title:"Lease length remaining", label:"Years remaining", placeholder:"e.g. 112", showIf:d=>["Leasehold","Share of freehold"].includes(d.tenure) },
@@ -957,13 +1013,15 @@
         flags.push("Utility issue disclosed. Review before marketing wording is finalised.");
       }
       if(data.planning_works === "Yes" && ["No","Not sure"].includes(data.planning_works_approval || "")){
-        flags.push("Recent works reported but approval status is unclear or negative. Review before marketing.");
+        flags.push("Major works reported but approval status is unclear or negative. Review before marketing.");
       }
       if(data.planning_works === "Yes" && ["No","Not sure"].includes(data.planning_permission_docs || "")){
-        flags.push("Recent works reported but planning / building regulations paperwork may need checking.");
+        flags.push("Major works reported but planning / building regulations paperwork may need checking.");
       }
       if(data.planning_works === "Yes" && ["No","Not sure"].includes(data.guarantees_docs || "")){
-        flags.push("Recent works reported but guarantees, certificates or warranties may need checking.");
+        flags.push("Major works reported but guarantees, certificates or warranties may need checking.");      }
+      if(data.recent_upgrades === "Yes"){
+        flags.push("Recent repairs or upgrades disclosed. Check for supporting information where relevant.");
       }
       if(data.insurance_issues === "Yes"){
         flags.push("Insurance issue disclosed. Clarify nature and current position.");
@@ -1064,8 +1122,7 @@
             <h3>Risks, restrictions and works</h3>
             <button class="btn ghost" style="width:auto" onclick="editSection('risk')">Edit</button>
           </div>
-          <div class="kv">${groupSectionRows(["flood_history","flood_details","additional_location_risks","additional_location_risks_details","structural_issues","structural_details","knotweed","insurance_issues","insurance_issues_details","neighbour_issues","neighbour_issue_details","disputes_complaints","disputes_details","listed_or_conservation","title_restrictions","title_restrictions_details","covenant_restrictions","covenant_restrictions_details","rights_of_way","rights_of_way_details","planning_works","planning_works_details","planning_works_approval","planning_permission_docs","guarantees_docs"])}</div>
-        </div>
+        <div class="kv">${groupSectionRows(["flood_history","flood_details","additional_location_risks","additional_location_risks_details","structural_issues","structural_details","knotweed","insurance_issues","insurance_issues_details","neighbour_issues","neighbour_issue_details","disputes_complaints","disputes_details","listed_or_conservation","title_restrictions","title_restrictions_details","covenant_restrictions","covenant_restrictions_details","rights_of_way","rights_of_way_details","planning_works","planning_works_details","planning_works_approval","recent_upgrades","recent_upgrades_details","planning_permission_docs","guarantees_docs"])}</div>        </div>
 
         ${["Leasehold","Share of freehold"].includes(data.tenure) ? `
           <div class="section-card">
@@ -1201,9 +1258,13 @@
       if(data.covenant_restrictions_details) lines.push(`Restriction details: ${cleanOneLine(data.covenant_restrictions_details)}`);
       lines.push(`Rights of way / shared access: ${data.rights_of_way || "—"}`);
       if(data.rights_of_way_details) lines.push(`Rights of way details: ${cleanOneLine(data.rights_of_way_details)}`);
-      lines.push(`Recent works / improvements / upgrades: ${data.planning_works || "—"}`);
-      if(data.planning_works_details) lines.push(`Works details: ${cleanOneLine(data.planning_works_details)}`);
+      lines.push(`Major works / alterations: ${data.planning_works || "—"}`);
+      if(data.planning_works_details) lines.push(`Major works details: ${cleanOneLine(data.planning_works_details)}`);
       if(data.planning_works_approval) lines.push(`Works approval status: ${data.planning_works_approval}`);
+      
+      lines.push(`Repairs / replacements / upgrades: ${data.recent_upgrades || "—"}`);
+      if(data.recent_upgrades_details) lines.push(`Repairs / upgrades details: ${cleanOneLine(data.recent_upgrades_details)}`);
+      
       if(data.planning_permission_docs) lines.push(`Planning / building regs paperwork: ${data.planning_permission_docs}`);
       if(data.guarantees_docs) lines.push(`Guarantees / certificates: ${data.guarantees_docs}`);
       lines.push("");
