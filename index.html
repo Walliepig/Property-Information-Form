@@ -311,8 +311,7 @@
     const SUBMISSION_EMAIL = "sales@stephaniemacnab.co.uk";
     const PRIVACY_URL = "https://www.stephaniemacnab.co.uk/privacy-policy/";
     const data = loadState();
-    let screenId = data.__screenId || "welcome";
-
+    let screenId = hasPrefillParams() ? "address_check" : (data.__screenId || "welcome");
     function loadState(){
       try{
         return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
@@ -362,6 +361,19 @@
           data[key] = prefill[key];
         }
       });
+    }
+
+    function hasPrefillParams(){
+      const params = new URLSearchParams(window.location.search);
+      return !!(
+        params.get("address1") ||
+        params.get("area") ||
+        params.get("town") ||
+        params.get("postcode") ||
+        params.get("name") ||
+        params.get("email") ||
+        params.get("mobile")
+      );
     }
     
     function formattedAddress(){
@@ -754,7 +766,8 @@
 
     function startNew(){
       clearState(true);
-      screenId = "consent";
+      screenId = hasPrefillParams() ? "address_check" : "consent";
+      applyQueryPrefill();
       saveState();
       render();
     }
@@ -764,9 +777,12 @@
       if(Object.keys(stored).length){
         Object.assign(data, stored);
         applyQueryPrefill();
-        screenId = stored.__screenId && stored.__screenId !== "submitted" ? stored.__screenId : "consent";
+        screenId = hasPrefillParams()
+          ? "address_check"
+          : (stored.__screenId && stored.__screenId !== "submitted" ? stored.__screenId : "consent");
       } else {
-        screenId = "consent";
+        applyQueryPrefill();
+        screenId = hasPrefillParams() ? "address_check" : "consent";
       }
       saveState();
       render();
