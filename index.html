@@ -342,18 +342,18 @@
           street = "";
         }
       }
-
-  return {
-    address_house_number: house,
-    address_street: street,
-    address_area: area,
-    town_city: town,
-    postcode: postcode,
-    declaration_name: params.get("name") || "",
-    declaration_email: params.get("email") || "",
-    declaration_mobile: params.get("mobile") || ""
-  };
-}
+    
+      return {
+        address_house_number: house,
+        address_street: street,
+        address_area: area,
+        town_city: town,
+        postcode: postcode,
+        declaration_name: params.get("name") || "",
+        declaration_email: params.get("email") || "",
+        declaration_mobile: params.get("mobile") || ""
+      };
+    }
 
     function formattedAddress(){
       return [
