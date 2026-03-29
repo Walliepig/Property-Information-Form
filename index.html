@@ -355,6 +355,15 @@
       };
     }
 
+    function applyQueryPrefill(){
+      const prefill = getQueryPrefill();
+      Object.keys(prefill).forEach(key => {
+        if (prefill[key] && !data[key]) {
+          data[key] = prefill[key];
+        }
+      });
+    }
+    
     function formattedAddress(){
       return [
         data.address_house_number,
