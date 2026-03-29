@@ -323,26 +323,37 @@
 
     function getQueryPrefill(){
       const params = new URLSearchParams(window.location.search);
-      return {
-        address_house_number: params.get("house") || "",
-        address_street: params.get("street") || "",
-        address_area: params.get("area") || "",
-        town_city: params.get("town") || "",
-        postcode: params.get("postcode") || "",
-        declaration_name: params.get("name") || "",
-        declaration_email: params.get("email") || "",
-        declaration_mobile: params.get("mobile") || ""
-      };
-    }
-
-    function applyQueryPrefill(){
-      const prefill = getQueryPrefill();
-      Object.keys(prefill).forEach(key => {
-        if (prefill[key] && !data[key]) {
-          data[key] = prefill[key];
+    
+      const address1 = (params.get("address1") || "").trim();
+      const area = (params.get("area") || "").trim();
+      const town = (params.get("town") || "").trim();
+      const postcode = (params.get("postcode") || "").trim();
+    
+      let house = "";
+      let street = "";
+    
+      if (address1) {
+        const match = address1.match(/^(\S+)\s+(.+)$/);
+        if (match) {
+          house = match[1].trim();
+          street = match[2].trim();
+        } else {
+          house = address1;
+          street = "";
         }
-      });
-    }
+      }
+
+  return {
+    address_house_number: house,
+    address_street: street,
+    address_area: area,
+    town_city: town,
+    postcode: postcode,
+    declaration_name: params.get("name") || "",
+    declaration_email: params.get("email") || "",
+    declaration_mobile: params.get("mobile") || ""
+  };
+}
 
     function formattedAddress(){
       return [
