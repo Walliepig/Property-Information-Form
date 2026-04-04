@@ -284,6 +284,12 @@
       .content{padding:28px 24px 22px}
       .summary-action{justify-content:space-between}
       .nav .btn{width:auto;min-width:140px}
+      .question-header{
+        min-height:150px;
+        display:flex;
+        flex-direction:column;
+        justify-content:flex-start;
+      }
     }
   </style>
 </head>
@@ -919,8 +925,10 @@
 
     function renderChoice(screen){
       return `
-        <div class="eyebrow">${escapeHtml(sectionTitles[screen.section] || screen.section)}</div>
-        <h2>${escapeHtml(screen.title)}</h2>
+        <div class="question-header">
+          <div class="eyebrow">${escapeHtml(sectionTitles[screen.section] || screen.section)}</div>
+          <h2>${escapeHtml(screen.title)}</h2>
+        </div>
         <div class="btn-grid">
           ${screen.options.map(opt => `
             <button class="btn" onclick="chooseOption('${screen.id}', '${escapeJs(opt)}')">${escapeHtml(opt)}</button>
@@ -936,8 +944,10 @@
       const val = data[screen.id] || "";
       const isTextArea = screen.kind === "textarea";
       return `
-        <div class="eyebrow">${escapeHtml(sectionTitles[screen.section] || screen.section)}</div>
-        <h2>${escapeHtml(screen.title)}</h2>
+        <div class="question-header">
+          <div class="eyebrow">${escapeHtml(sectionTitles[screen.section] || screen.section)}</div>
+          <h2>${escapeHtml(screen.title)}</h2>
+        </div>
         <div class="field">
           <label for="${escapeHtml(screen.id)}">${escapeHtml(screen.label || screen.title)}</label>
           ${isTextArea
@@ -1449,6 +1459,7 @@
       
       if(screen.kind === "summary"){
         app.innerHTML = renderSummary();
+        return;
       }
     }
 
