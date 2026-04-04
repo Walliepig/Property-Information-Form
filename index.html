@@ -950,7 +950,10 @@
                 placeholder="${escapeHtml(screen.placeholder || '')}"
                 value="${escapeHtml(val)}"
                 ${screen.id === "legal_owner_names" ? 'style="text-transform:capitalize"' : ""}
-                oninput="handleTextInput('${screen.id}', this)" />`
+                oninput="handleTextInput('${screen.id}', this)"
+                onkeydown="handleKeyNext(event, '${screen.id}')"
+                enterkeyhint="next"
+              />`
           }
         </div>
         ${screen.required ? `<p class="tiny">This answer is required.</p>` : `<p class="tiny">Leave blank if not known.</p>`}
@@ -961,6 +964,23 @@
       `;
     }
 
+    function handleKeyNext(e, id){
+      if(e.key === "Enter"){
+        e.preventDefault();
+    
+        const current = screens.find(s => s.id === id);
+    
+        if(current && current.required){
+          if(!String(data[id] || "").trim()){
+            alert("Please complete this field before continuing.");
+            return;
+          }
+        }
+    
+        goNext();
+      }
+    }
+    
     function groupSectionRows(fieldIds){
       const rows = fieldIds
         .filter(id => {
