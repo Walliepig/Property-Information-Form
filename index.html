@@ -1438,11 +1438,17 @@
       }
       if(screen.kind === "text" || screen.kind === "textarea"){
         app.innerHTML = renderText(screen);
+      
+        setTimeout(() => {
+          const el = document.getElementById(screen.id);
+          if (el) el.focus();
+        }, 0);
+
         return;
       }
+      
       if(screen.kind === "summary"){
         app.innerHTML = renderSummary();
-        return;
       }
     }
 
