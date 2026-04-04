@@ -743,8 +743,7 @@
 
       { id:"declaration_name", kind:"text", section:"docs", title:"Your name", label:"Full name", required:true },
       { id:"declaration_email", kind:"text", section:"docs", title:"Email address", label:"Email", required:true },
-      { id:"declaration_mobile", kind:"text", section:"docs", title:"Mobile number", label:"Mobile", required:false },
-
+      { id:"declaration_mobile", kind:"text", section:"docs", title:"Mobile number", label:"Mobile", helper:"Please confirm the best contact number for viewings and updates", required:false },
       { id:"declaration_confirm", kind:"choice", section:"docs", title:"Please confirm", options:[
         "I confirm this information is accurate to the best of my knowledge",
         "I am not able to confirm this"
@@ -966,7 +965,15 @@
               />`
           }
         </div>
-        ${screen.required ? `<p class="tiny">This answer is required.</p>` : `<p class="tiny">Leave blank if not known.</p>`}
+        <p class="tiny">
+          ${screen.helper 
+            ? escapeHtml(screen.helper) 
+            : (screen.required 
+                ? "This answer is required." 
+                : "Leave blank if not known."
+              )
+          }
+        </p>        
         <div class="nav">
           <button class="btn ghost" onclick="goPrev()">Back</button>
           <button class="btn primary" onclick="goNext()" ${nextButtonDisabled(screen) ? "disabled" : ""}>Next</button>
